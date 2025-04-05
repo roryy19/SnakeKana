@@ -5,8 +5,6 @@ import java.awt.event.*;
 public class MenuScreen extends JPanel {
     
     private JFrame frame;
-    static final int SCREEN_WIDTH = 600;
-    static final int SCREEN_HEIGHT = 600;
 
     private int chooseX;
     private int chooseY;
@@ -31,14 +29,14 @@ public class MenuScreen extends JPanel {
     private int blueButtonWidth;
     private int blueButtonHeight;
 
-    private Image dirtImage;
+    private Image backgroundImage;
     
 
     public MenuScreen(JFrame frame) {
         this.frame = frame;
-        setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
-        ImageIcon dirtIcon = new ImageIcon(getClass().getResource("/res/images/dirt-background.PNG"));
-        dirtImage = dirtIcon.getImage();
+        setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
+        ImageIcon backgroundIcon = new ImageIcon(getClass().getResource("/res/images/background1.jpg"));
+        backgroundImage = backgroundIcon.getImage();
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -82,10 +80,10 @@ public class MenuScreen extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(dirtImage, 0, 0, this); // dirt background
-        g.drawImage(dirtImage, dirtImage.getWidth(this) - 10, 0, this); 
-        g.drawImage(dirtImage, 0, dirtImage.getHeight(this) - 10, this);
-        g.drawImage(dirtImage, dirtImage.getWidth(this) - 10, dirtImage.getHeight(this) - 10, this);
+        g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this); // dirt background
+        /*g.drawImage(backgroundImage, backgroundImage.getWidth(this) - 10, 0, this); 
+        g.drawImage(backgroundImage, 0, backgroundImage.getHeight(this) - 10, this);
+        g.drawImage(backgroundImage, backgroundImage.getWidth(this) - 10, backgroundImage.getHeight(this) - 10, this);*/
         drawHomeButton(g); // home button
         drawSnakeColorButtons(g); // choose snake color buttons
     }
@@ -105,7 +103,7 @@ public class MenuScreen extends JPanel {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 50));
         FontMetrics metricsChoose = g.getFontMetrics();
-        chooseX = (SCREEN_WIDTH - metricsChoose.stringWidth("Choose Snake Color:")) / 2;; 
+        chooseX = (GameConstants.SCREEN_WIDTH - metricsChoose.stringWidth("Choose Snake Color:")) / 2;; 
         chooseY = 200; 
         g.drawString("Choose Snake Color:", chooseX, chooseY); 
 
@@ -113,7 +111,7 @@ public class MenuScreen extends JPanel {
         g.setColor(new Color(23, 102, 31));
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsGreen = g.getFontMetrics();
-        greenButtonX = (SCREEN_WIDTH - metricsGreen.stringWidth("Green")) / 2;; 
+        greenButtonX = (GameConstants.SCREEN_WIDTH - metricsGreen.stringWidth("Green")) / 2;; 
         greenButtonY = 300; 
         greenButtonWidth = metricsGreen.stringWidth("Green");
         greenButtonHeight = metricsGreen.getHeight(); 
@@ -124,7 +122,7 @@ public class MenuScreen extends JPanel {
         g.setColor(Color.RED);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsRed = g.getFontMetrics();
-        redButtonX = (SCREEN_WIDTH - metricsRed.stringWidth("Red")) / 2;; 
+        redButtonX = (GameConstants.SCREEN_WIDTH - metricsRed.stringWidth("Red")) / 2;; 
         redButtonY = 400; 
         redButtonWidth = metricsRed.stringWidth("Red");
         redButtonHeight = metricsRed.getHeight(); 
@@ -135,7 +133,7 @@ public class MenuScreen extends JPanel {
         g.setColor(Color.BLUE);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsBlue = g.getFontMetrics();
-        blueButtonX = (SCREEN_WIDTH - metricsBlue.stringWidth("Blue")) / 2;; 
+        blueButtonX = (GameConstants.SCREEN_WIDTH - metricsBlue.stringWidth("Blue")) / 2;; 
         blueButtonY = 500; 
         blueButtonWidth = metricsBlue.stringWidth("Blue");
         blueButtonHeight = metricsBlue.getHeight(); 

@@ -2,27 +2,24 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.util.Random;
-//import javax.sound.sampled.*;
-//import java.io.IOException;
-//import java.net.URL;
 
 public class GamePanel extends JPanel implements ActionListener{
 
     private JFrame frame;
-    static final int SCREEN_WIDTH = 600;
-    static final int SCREEN_HEIGHT = 600;
-    static final int UNIT_SIZE = 25;
-    static final int GAME_UNITS = (SCREEN_WIDTH * SCREEN_HEIGHT) / UNIT_SIZE; // amount of units that can fit on screen
+    static final int topBarHeight = 100;
+    int playAreaHeight;
+    int GAME_UNITS; // amount of units that can fit on screen
     int DELAY = 75;
     
     // body of snake
-    final int x[] = new int[GAME_UNITS]; // snake wont be bigger than game
-    final int y[] = new int[GAME_UNITS]; 
+    final int x[] = new int[1000]; // snake wont be bigger than game
+    final int y[] = new int[1000]; 
     int bodyParts = 6; // initial # of body parts
     
-    int applesEaten;    
-    int appleX;
-    int appleY;
+    int score; 
+    int total;   
+    int kanaX;
+    int kanaY;
     
     boolean newLevelCondition = true;
     String newLevelString = "";
@@ -53,15 +50,16 @@ public class GamePanel extends JPanel implements ActionListener{
     Timer timer;
     Random random;
 
-    private Image appleImage;
-    private Image dirtImage;
+    private Image kanaImage;
+    private Image backgroundImage1;
 
     int highScore;
+    boolean movedThisTick = false;
 
     public GamePanel(JFrame frame) {
         this.frame = frame;
         random = new Random();
-        this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
+        this.setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
         this.setBackground(Color.DARK_GRAY);
         this.setFocusable(true);
         this.addKeyListener(new MyKeyAdapter());
@@ -71,21 +69,29 @@ public class GamePanel extends JPanel implements ActionListener{
                 checkClick(e.getX(), e.getY());
             }
         });
-        /*ImageIcon grassIcon = new ImageIcon("src/res/images/grass-background.jpg");
-        grassImage = grassIcon.getImage();*/
-        //ImageIcon appleIcon = new ImageIcon("src/res/images/apple-png.png");
-        ImageIcon appleIcon = new ImageIcon(getClass().getResource("/res/kana/a_hira.png"));
-        appleImage = appleIcon.getImage();
-        //ImageIcon dirtIcon = new ImageIcon("src/res/images/dirt-background.PNG");
-        /*ImageIcon dirtIcon = new ImageIcon(getClass().getResource("/res/images/dirt-background.PNG"));
-        dirtImage = dirtIcon.getImage();
-        ImageIcon liamIcon = new ImageIcon("src/res/images/liam-snake-head.JPG");
-        liamSnakeImage = liamIcon.getImage();*/
+        ImageIcon kanaIcon = new ImageIcon(getClass().getResource("/res/kana/a_hira.png"));
+        kanaImage = kanaIcon.getImage();
+        ImageIcon backgroundIcon = new ImageIcon(getClass().getResource("/res/images/background1.jpg"));
+        backgroundImage1 = backgroundIcon.getImage();
         
         startGame();
     }
     public void startGame() {
-        newApple();
+        // Wait for layout sizing if needed
+        if (getWidth() == 0 || getHeight() == 0) {
+            SwingUtilities.invokeLater(() -> startGame());
+            return;
+        }
+
+        playAreaHeight = getHeight() - topBarHeight;
+        int widthUnits = getWidth() / GameConstants.UNIT_SIZE;
+        int heightUnits = getHeight() / GameConstants.UNIT_SIZE;
+        GAME_UNITS = widthUnits * heightUnits;
+
+        x[0] = GameConstants.SCREEN_WIDTH / 2;
+        y[0] = (GameConstants.SCREEN_HEIGHT + GamePanel.topBarHeight) / 2;
+
+        newKana();
         running = true;
         timer = new Timer(DELAY, this);
         showNewLevelText();
@@ -93,8 +99,8 @@ public class GamePanel extends JPanel implements ActionListener{
     }
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        /*g.drawImage(dirtImage, 0, 0, this); // dirt background
-        g.drawImage(dirtImage, dirtImage.getWidth(this) - 10, 0, this); 
+        g.drawImage(backgroundImage1, 0, 0, getWidth(), getHeight(), this); // dirt background
+        /*g.drawImage(dirtImage, dirtImage.getWidth(this) - 10, 0, this); 
         g.drawImage(dirtImage, 0, dirtImage.getHeight(this) - 10, this);
         g.drawImage(dirtImage, dirtImage.getWidth(this) - 10, dirtImage.getHeight(this) - 10, this);*/
         draw(g);
@@ -108,48 +114,81 @@ public class GamePanel extends JPanel implements ActionListener{
             g.drawString(newLevelString, x, y);
         }
     }
+    public void drawHeaderBar(Graphics g) {
+        int screenWidth = getWidth();
+    
+        // Background
+        g.setColor(new Color(0, 0, 0, 150));
+        g.fillRect(0, 0, screenWidth, topBarHeight);
+
+        // Centered romaji prompt
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 30));
+        FontMetrics metrics = g.getFontMetrics();
+        String prompt = "Find: "; //+ currentRomajiPrompt;
+        int x = (screenWidth - metrics.stringWidth(prompt)) / 2;
+        g.drawString(prompt, x, 40);
+
+        // Score (left)
+        g.setColor(Color.CYAN);
+        g.setFont(new Font("Ink Free", Font.PLAIN, 30));
+        g.drawString("Score: " + score, 10, 30);
+
+        // Accuracy (right)
+        g.setColor(Color.ORANGE);
+        g.setFont(new Font("Ink Free", Font.PLAIN, 30));
+        g.drawString("Accuracy: " + getAccuracy() + "%", screenWidth - 235, 30);
+    }
+    public double getAccuracy() {
+        if (total == 0) return 100.0;
+        return score / total;
+    }
     public void draw(Graphics g) {
         if (running) {
-            // draw apple
-            g.drawImage(appleImage, appleX - 10, appleY - 15, UNIT_SIZE * 2, UNIT_SIZE * 2, this);
+            drawHeaderBar(g);
+            // draw kana
+            g.drawImage(kanaImage, kanaX - 10, kanaY - 15, GameConstants.UNIT_SIZE * 2, GameConstants.UNIT_SIZE * 2, this);
 
             // iterate through all body parts of snake
             for (int i = 0; i < bodyParts; i++) {
                 if (i == 0) { // head of snake
                     g.setColor(GameSettings.getSnakeColor());
-                    g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+                    g.fillRect(x[i], y[i], GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE);
                     //g.drawImage(liamSnakeImage, x[i], y[i], UNIT_SIZE, UNIT_SIZE, this);
                 } else { // body of snake
                     g.setColor(GameSettings.getSnakeColor());
                     //g.setColor(new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255))); // random snake color
-                    g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+                    g.fillRect(x[i], y[i], GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE);
                 }
             }
-            g.setColor(Color.RED);
-            g.setFont(new Font("Ink Free",Font.BOLD, 25)); // current/max score and level
-            FontMetrics metricsScore = getFontMetrics(g.getFont());
-            g.drawString("Score: "+applesEaten, (SCREEN_WIDTH - metricsScore.stringWidth("Score : "+applesEaten)) / 2, g.getFont().getSize()); // middle
             g.setColor(Color.CYAN);
             g.setFont(new Font("Ink Free",Font.BOLD, 25));
             FontMetrics metricsHighScore = getFontMetrics(g.getFont());
-            g.drawString("High Score: "+highScore, (SCREEN_WIDTH - metricsHighScore.stringWidth("Score : "+highScore)) / 2 - 185, g.getFont().getSize()); // left
+            g.drawString("High Score: "+highScore, (getWidth() - metricsHighScore.stringWidth("Score : "+highScore)) / 2 - 185, g.getFont().getSize()); // left
             g.setColor(Color.RED);
             g.setFont(new Font("Ink Free", Font.BOLD, 25));
             FontMetrics metricsLevel = getFontMetrics(g.getFont());
-            g.drawString("Level: " + (currentLevel + 1), (SCREEN_WIDTH - metricsLevel.stringWidth("Level: " + currentLevel + 1)) / 2 + 125, g.getFont().getSize()); //right
+            g.drawString("Level: " + (currentLevel + 1), (getWidth() - metricsLevel.stringWidth("Level: " + currentLevel + 1)) / 2 + 125, g.getFont().getSize()); //right
         } else {
             gameOver(g); 
         }   
     }
-    public void newApple() { 
-        // generate coords of new apple
+    public void newKana() { 
+        int unitsWide = getWidth() / GameConstants.UNIT_SIZE;
+        int unitsHigh = getHeight() / GameConstants.UNIT_SIZE;
+
+        int minX = 1; // skip 0th column
+        int maxX = unitsWide - 2; // skip last column
+        int minY = (topBarHeight / GameConstants.UNIT_SIZE) + 1; // skip top bar
+        int maxY = unitsHigh - 2; // skip bottom row
+
         do {
-            appleX = random.nextInt((int)(SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
-            appleY = random.nextInt((int)(SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
-        } while (isOnSnake(appleX, appleY));
+            kanaX = (random.nextInt(maxX - minX + 1) + minX) * GameConstants.UNIT_SIZE;
+            kanaY = (random.nextInt(maxY - minY + 1) + minY) * GameConstants.UNIT_SIZE;
+        } while (isOnSnake(kanaX, kanaY));
     }
     private boolean isOnSnake(int x, int y) {
-        // doesn't let apple be placed where snake body is
+        // doesn't let kana be placed where snake body is
         for (int i = 0; i < bodyParts; i++) {
             if (this.x[i] == x && this.y[i] == y) {
                 return true;
@@ -158,6 +197,7 @@ public class GamePanel extends JPanel implements ActionListener{
         return false;
     }
     public void move() {
+        movedThisTick = true;
         // shifting body parts of snake
         for (int i = bodyParts; i > 0; i--) { 
             x[i] = x[i-1];
@@ -166,26 +206,26 @@ public class GamePanel extends JPanel implements ActionListener{
         // change direction of snake
         switch(direction) { 
             case 'U':
-                y[0] = y[0] - UNIT_SIZE;
+                y[0] = y[0] - GameConstants.UNIT_SIZE;
                 break;
             case 'D':
-                y[0] = y[0] + UNIT_SIZE;
+                y[0] = y[0] + GameConstants.UNIT_SIZE;
                 break;
             case 'L':
-                x[0] = x[0] - UNIT_SIZE;
+                x[0] = x[0] - GameConstants.UNIT_SIZE;
                 break;
             case 'R':
-                x[0] = x[0] + UNIT_SIZE;
+                x[0] = x[0] + GameConstants.UNIT_SIZE;
                 break;
         }
     }
-    public void checkApple() {
-        // head postion == apple postion
-        if ((x[0] == appleX) && (y[0] == appleY)) { 
+    public void checkKana () {
+        // head postion == kana postion
+        if ((x[0] == kanaX) && (y[0] == kanaY)) { 
             bodyParts++;
-            applesEaten++;
-            highScore = Math.max(highScore, applesEaten);
-            if ((applesEaten % 10 )== 0 && DELAY > 40) { // every 10 apples eaten, increase delay as long as it greater than 30
+            score++;
+            highScore = Math.max(highScore, score);
+            if ((score % 10 )== 0 && DELAY > 40) { // every 10 kanas correct, increase delay as long as it greater than 30
                 currentLevel++;
                 DELAY -= 10;
                 timer.stop();
@@ -193,7 +233,7 @@ public class GamePanel extends JPanel implements ActionListener{
                 timer.start();
                 showNewLevelText();
             }
-            newApple();
+            newKana();
         }
     }
     public void showNewLevelText() {
@@ -227,15 +267,15 @@ public class GamePanel extends JPanel implements ActionListener{
             running = false;
         }
         // check if head touches right border
-        if (x[0] > SCREEN_WIDTH - UNIT_SIZE) {
+        if (x[0] > getWidth() - GameConstants.UNIT_SIZE) {
             running = false;
         }
         // check if head touches top border
-        if (y[0] < 0) {
+        if (y[0] < topBarHeight) {
             running = false;
         }
         // check if head touches bottom border
-        if (y[0] > SCREEN_HEIGHT - UNIT_SIZE) {
+        if (y[0] > getHeight() - GameConstants.UNIT_SIZE) {
             running = false;
         }
         if (!running) {
@@ -258,7 +298,7 @@ public class GamePanel extends JPanel implements ActionListener{
         }
     }
     public void resetGame() {
-        applesEaten = 0;
+        score = 0;
         bodyParts = 6;
         for (int i = 0; i < bodyParts; i++) { // make previous snake not stay on screen
             x[i] = -1;
@@ -285,28 +325,28 @@ public class GamePanel extends JPanel implements ActionListener{
         g.setColor(Color.RED);
         g.setFont(new Font("Ink Free",Font.BOLD, 75));
         FontMetrics metricsGameOver = getFontMetrics(g.getFont());
-        g.drawString("Game Over", (SCREEN_WIDTH - metricsGameOver.stringWidth("Game Over")) / 2, SCREEN_HEIGHT / 3 + 50);
+        g.drawString("Game Over", (getWidth() - metricsGameOver.stringWidth("Game Over")) / 2, getHeight() / 3 + 50);
         g.setColor(Color.RED);
         g.setFont(new Font("Ink Free",Font.BOLD, 25)); 
         
         // current/max score and level
         FontMetrics metricsScore = getFontMetrics(g.getFont());
-        g.drawString("Score: "+applesEaten, (SCREEN_WIDTH - metricsScore.stringWidth("Score : "+applesEaten)) / 2, g.getFont().getSize()); // middle
+        g.drawString("Score: "+score, (getWidth() - metricsScore.stringWidth("Score : "+score)) / 2, g.getFont().getSize()); // middle
         g.setColor(Color.CYAN);
         g.setFont(new Font("Ink Free",Font.BOLD, 25));
         FontMetrics metricsHighScore = getFontMetrics(g.getFont());
-        g.drawString("High Score: "+highScore, (SCREEN_WIDTH - metricsHighScore.stringWidth("Score : "+highScore)) / 2 - 185, g.getFont().getSize()); // left
+        g.drawString("High Score: "+highScore, (getWidth() - metricsHighScore.stringWidth("Score : "+highScore)) / 2 - 185, g.getFont().getSize()); // left
         g.setColor(Color.RED);
         g.setFont(new Font("Ink Free", Font.BOLD, 25));
         FontMetrics metricsLevel = getFontMetrics(g.getFont());
-        g.drawString("Level: " + (currentLevel + 1), (SCREEN_WIDTH - metricsLevel.stringWidth("Level: " + currentLevel + 1)) / 2 + 125, g.getFont().getSize()); //right
+        g.drawString("Level: " + (currentLevel + 1), (getWidth() - metricsLevel.stringWidth("Level: " + currentLevel + 1)) / 2 + 125, g.getFont().getSize()); //right
 
         // play again button
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 85));
         FontMetrics metricsPlayAgain = getFontMetrics(g.getFont());
-        retryButtonX = (SCREEN_WIDTH - metricsPlayAgain.stringWidth("Play Again")) / 2;
-        retryButtonY = (SCREEN_HEIGHT / 2 + metricsPlayAgain.getHeight());
+        retryButtonX = (getWidth() - metricsPlayAgain.stringWidth("Play Again")) / 2;
+        retryButtonY = (getHeight() / 2 + metricsPlayAgain.getHeight());
         retryButtonWidth = metricsPlayAgain.stringWidth("Play Again"); // width of text
         retryButtonHeight = metricsPlayAgain.getHeight();   // height of text
         g.drawString("Play Again", retryButtonX, retryButtonY);
@@ -327,7 +367,7 @@ public class GamePanel extends JPanel implements ActionListener{
     public void actionPerformed(ActionEvent e) {
         if (running) {
             move();
-            checkApple();
+            checkKana ();
             checkCollision();
         }
         repaint();
@@ -336,6 +376,8 @@ public class GamePanel extends JPanel implements ActionListener{
     public class MyKeyAdapter extends KeyAdapter {
         @Override
         public void keyPressed(KeyEvent e) {
+            if (!movedThisTick) return;
+
             // check arrow keys
             switch (e.getKeyCode()) { 
                 case KeyEvent.VK_LEFT: // to go left
@@ -363,6 +405,7 @@ public class GamePanel extends JPanel implements ActionListener{
                     }
                     break;
             }
+            movedThisTick = false; // blocks multiple changes within one tick
         }
     }
 

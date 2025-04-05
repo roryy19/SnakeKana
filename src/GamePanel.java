@@ -50,11 +50,14 @@ public class GamePanel extends JPanel implements ActionListener{
     Timer timer;
     Random random;
 
-    private Image kanaImage;
     private Image backgroundImage1;
 
     int highScore;
     boolean movedThisTick = false;
+
+    boolean chooseHiragana = true;
+    boolean chooseKatakana = false;
+    Kana correctKana;
 
     public GamePanel(JFrame frame) {
         this.frame = frame;
@@ -69,8 +72,6 @@ public class GamePanel extends JPanel implements ActionListener{
                 checkClick(e.getX(), e.getY());
             }
         });
-        ImageIcon kanaIcon = new ImageIcon(getClass().getResource("/res/kana/a_hira.png"));
-        kanaImage = kanaIcon.getImage();
         ImageIcon backgroundIcon = new ImageIcon(getClass().getResource("/res/images/background1.jpg"));
         backgroundImage1 = backgroundIcon.getImage();
         
@@ -99,10 +100,7 @@ public class GamePanel extends JPanel implements ActionListener{
     }
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(backgroundImage1, 0, 0, getWidth(), getHeight(), this); // dirt background
-        /*g.drawImage(dirtImage, dirtImage.getWidth(this) - 10, 0, this); 
-        g.drawImage(dirtImage, 0, dirtImage.getHeight(this) - 10, this);
-        g.drawImage(dirtImage, dirtImage.getWidth(this) - 10, dirtImage.getHeight(this) - 10, this);*/
+        g.drawImage(backgroundImage1, 0, 0, getWidth(), getHeight(), this); //background
         draw(g);
 
         if (newLevelCondition) { // new level text
@@ -125,7 +123,7 @@ public class GamePanel extends JPanel implements ActionListener{
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 30));
         FontMetrics metrics = g.getFontMetrics();
-        String prompt = "Find: "; //+ currentRomajiPrompt;
+        String prompt = "Find: " + correctKana.romaji;
         int x = (screenWidth - metrics.stringWidth(prompt)) / 2;
         g.drawString(prompt, x, 40);
 
@@ -139,15 +137,15 @@ public class GamePanel extends JPanel implements ActionListener{
         g.setFont(new Font("Ink Free", Font.PLAIN, 30));
         g.drawString("Accuracy: " + getAccuracy() + "%", screenWidth - 235, 30);
     }
-    public double getAccuracy() {
-        if (total == 0) return 100.0;
+    public int getAccuracy() {
+        if (total == 0) return 0;
         return score / total;
     }
     public void draw(Graphics g) {
         if (running) {
             drawHeaderBar(g);
             // draw kana
-            g.drawImage(kanaImage, kanaX - 10, kanaY - 15, GameConstants.UNIT_SIZE * 2, GameConstants.UNIT_SIZE * 2, this);
+            g.drawImage(correctKana.image, kanaX - 10, kanaY - 15, GameConstants.UNIT_SIZE * 2, GameConstants.UNIT_SIZE * 2, this);
 
             // iterate through all body parts of snake
             for (int i = 0; i < bodyParts; i++) {
@@ -186,6 +184,9 @@ public class GamePanel extends JPanel implements ActionListener{
             kanaX = (random.nextInt(maxX - minX + 1) + minX) * GameConstants.UNIT_SIZE;
             kanaY = (random.nextInt(maxY - minY + 1) + minY) * GameConstants.UNIT_SIZE;
         } while (isOnSnake(kanaX, kanaY));
+
+        // random kana
+        randomKana();
     }
     private boolean isOnSnake(int x, int y) {
         // doesn't let kana be placed where snake body is
@@ -195,6 +196,19 @@ public class GamePanel extends JPanel implements ActionListener{
             }
         }
         return false;
+    }
+    public void randomKana() {
+        if (chooseHiragana) { // only hiragana
+            correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
+        } 
+        else if (chooseKatakana) { // only katakana
+            correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
+        }
+        else { // both hiragana and katakana
+            int temp = random.nextInt(1); // 0 = hiragana, 1 = katakana
+            if (temp == 0) correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
+            else correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
+        }
     }
     public void move() {
         movedThisTick = true;

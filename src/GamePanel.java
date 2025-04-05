@@ -58,6 +58,8 @@ public class GamePanel extends JPanel implements ActionListener{
     boolean chooseHiragana = true;
     boolean chooseKatakana = false;
     Kana correctKana;
+    boolean newFuriganaCondition = false;
+    String furiganaString = "";
 
     public GamePanel(JFrame frame) {
         this.frame = frame;
@@ -103,14 +105,22 @@ public class GamePanel extends JPanel implements ActionListener{
         g.drawImage(backgroundImage1, 0, 0, getWidth(), getHeight(), this); //background
         draw(g);
 
-        if (newLevelCondition) { // new level text
+        if (newFuriganaCondition) { // show furigana text
+            g.setColor(Color.YELLOW);
+            g.setFont(new Font("Ink Free", Font.BOLD, 60));
+            FontMetrics metricsNewLevel = g.getFontMetrics();
+            int x = (getWidth() - metricsNewLevel.stringWidth(furiganaString)) / 2;
+            int y = (getHeight() / 2 - metricsNewLevel.getAscent());
+            g.drawString(furiganaString, x, y);
+        }
+        /*if (newLevelCondition) { // new level text
             g.setColor(Color.YELLOW);
             g.setFont(new Font("Ink Free", Font.BOLD, 40));
             FontMetrics metricsNewLevel = g.getFontMetrics();
             int x = (getWidth() - metricsNewLevel.stringWidth(newLevelString)) / 2;
             int y = (getHeight() / 2 - metricsNewLevel.getAscent());
             g.drawString(newLevelString, x, y);
-        }
+        }*/
     }
     public void drawHeaderBar(Graphics g) {
         int screenWidth = getWidth();
@@ -121,20 +131,20 @@ public class GamePanel extends JPanel implements ActionListener{
 
         // Centered romaji prompt
         g.setColor(Color.WHITE);
-        g.setFont(new Font("Ink Free", Font.BOLD, 30));
+        g.setFont(new Font("Ink Free", Font.BOLD, 40));
         FontMetrics metrics = g.getFontMetrics();
         String prompt = "Find: " + correctKana.romaji;
         int x = (screenWidth - metrics.stringWidth(prompt)) / 2;
-        g.drawString(prompt, x, 40);
+        g.drawString(prompt, x, 50);
 
         // Score (left)
         g.setColor(Color.CYAN);
-        g.setFont(new Font("Ink Free", Font.PLAIN, 30));
+        g.setFont(new Font("Ink Free", Font.BOLD, 30));
         g.drawString("Score: " + score, 10, 30);
 
         // Accuracy (right)
         g.setColor(Color.ORANGE);
-        g.setFont(new Font("Ink Free", Font.PLAIN, 30));
+        g.setFont(new Font("Ink Free", Font.BOLD, 30));
         g.drawString("Accuracy: " + getAccuracy() + "%", screenWidth - 235, 30);
     }
     public int getAccuracy() {
@@ -209,6 +219,7 @@ public class GamePanel extends JPanel implements ActionListener{
             if (temp == 0) correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
             else correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
         }
+        showFurigana();
     }
     public void move() {
         movedThisTick = true;
@@ -268,6 +279,17 @@ public class GamePanel extends JPanel implements ActionListener{
         });
         clearNewLevelText.setRepeats(false); // timer only triggers once
         clearNewLevelText.start();
+    }
+    public void showFurigana() {
+        newFuriganaCondition = true;
+        furiganaString = correctKana.romaji;
+        repaint();
+        Timer clearFuriganaText = new Timer(1000, e -> {
+            newFuriganaCondition = false;
+            repaint();
+        });
+        clearFuriganaText.setRepeats(false);
+        clearFuriganaText.start();
     }
     public void checkCollision() {
         // check if head collides w/ body, iterate through body parts

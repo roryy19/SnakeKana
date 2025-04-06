@@ -55,13 +55,13 @@ public class GamePanel extends JPanel implements ActionListener{
     int highScore;
     boolean movedThisTick = false;
 
-    boolean chooseHiragana = true;
-    boolean chooseKatakana = false;
+    boolean chooseHiragana;
+    boolean chooseKatakana;
     Kana correctKana;
     boolean newFuriganaCondition = false;
     String furiganaString = "";
 
-    public GamePanel(JFrame frame) {
+    public GamePanel(JFrame frame, String kanaMode) {
         this.frame = frame;
         random = new Random();
         this.setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
@@ -76,7 +76,11 @@ public class GamePanel extends JPanel implements ActionListener{
         });
         ImageIcon backgroundIcon = new ImageIcon(getClass().getResource("/res/images/background1.jpg"));
         backgroundImage1 = backgroundIcon.getImage();
-        
+
+        // choose kana that will be used
+        this.chooseHiragana = kanaMode.equals("Hiragana") || kanaMode.equals("Both");
+        this.chooseKatakana = kanaMode.equals("Katakana") || kanaMode.equals("Both");
+
         startGame();
     }
     public void startGame() {
@@ -208,16 +212,16 @@ public class GamePanel extends JPanel implements ActionListener{
         return false;
     }
     public void randomKana() {
-        if (chooseHiragana) { // only hiragana
-            correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
+        if (chooseHiragana && chooseKatakana) { // hiragana and katakana
+            int temp = random.nextInt(2); // 0 = hiragana, 1 = katakana
+            if (temp == 0) correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size())); // hiragana
+            else correctKana = Kana.katakana.get(random.nextInt(Kana.katakana.size())); // katakana
         } 
         else if (chooseKatakana) { // only katakana
-            correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
+            correctKana = Kana.katakana.get(random.nextInt(Kana.katakana.size()));
         }
-        else { // both hiragana and katakana
-            int temp = random.nextInt(1); // 0 = hiragana, 1 = katakana
-            if (temp == 0) correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
-            else correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
+        else { // only hiragana
+            correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
         }
         showFurigana();
     }

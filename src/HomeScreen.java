@@ -3,16 +3,8 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class HomeScreen extends JPanel {
-
-    //static final int SCREEN_WIDTH = 600;
-    //static final int SCREEN_HEIGHT = 600;
     
     private JFrame frame;
-
-    private int titleButtonX;
-    private int titleButtonY;
-    private int titleButtonWidth;
-    private int titleButtonHeight;
 
     private int playButtonX;
     private int playButtonY;
@@ -88,6 +80,7 @@ public class HomeScreen extends JPanel {
                 break;
         }
     }
+
     private void checkClick(int x, int y) {
         // play button
         if (x >= playButtonX && x <= (playButtonX + playButtonWidth) && 
@@ -100,6 +93,7 @@ public class HomeScreen extends JPanel {
             startMenu();
         }
     }
+
     private void startGame() {
         frame.remove(this); // remove home screen to play game
 
@@ -111,6 +105,7 @@ public class HomeScreen extends JPanel {
         gamePanel.requestFocusInWindow();
         frame.validate();
     }
+
     private void startMenu() {
         frame.remove(this); // remove home screen to go to menu
 
@@ -122,6 +117,7 @@ public class HomeScreen extends JPanel {
         menuScreen.requestFocusInWindow();
         frame.validate();
     }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -133,11 +129,13 @@ public class HomeScreen extends JPanel {
         drawPlayButton(g); // play button
         drawMenuButton(g); // menu button
     }
+
     public void setMode() {
         if (katakanaButton.isSelected()) selectedKanaMode = "Katakana";
         else if (bothButton.isSelected()) selectedKanaMode = "Both";
         else selectedKanaMode = "Hiragana";
     }
+
     private void drawSnakeKana(Graphics g) {
         String text1 = "Snake";
         String text2 = "Kana";
@@ -156,13 +154,14 @@ public class HomeScreen extends JPanel {
         int y = 200;  
 
         // "Snake" in green
-        g.setColor(Color.GREEN);
+        g.setColor(new Color(23, 102, 31));
         g.drawString(text1, x, y);
 
         // "Kana" in white, following "Snake"
         g.setColor(Color.WHITE);
         g.drawString(text2, x + text1Width, y);
     }
+
     private void drawPlayButton(Graphics g) {
         g.setColor(Color.CYAN);
         g.setFont(new Font("Ink Free", Font.BOLD, 125));
@@ -174,6 +173,7 @@ public class HomeScreen extends JPanel {
         g.drawString("Play", playButtonX, playButtonY); 
         playButtonY = playButtonY - metricsPlay.getAscent(); // make Y coord top of text not middle for clicking
     }
+
     private void drawMenuButton(Graphics g) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));

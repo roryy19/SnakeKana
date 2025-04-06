@@ -61,6 +61,8 @@ public class GamePanel extends JPanel implements ActionListener{
     boolean newFuriganaCondition = false;
     String furiganaString = "";
 
+    private KanaManager kanaManager;
+
     public GamePanel(JFrame frame, String kanaMode) {
         this.frame = frame;
         random = new Random();
@@ -78,11 +80,14 @@ public class GamePanel extends JPanel implements ActionListener{
         backgroundImage1 = backgroundIcon.getImage();
 
         // choose kana that will be used
-        this.chooseHiragana = kanaMode.equals("Hiragana") || kanaMode.equals("Both");
-        this.chooseKatakana = kanaMode.equals("Katakana") || kanaMode.equals("Both");
+        //this.chooseHiragana = kanaMode.equals("Hiragana") || kanaMode.equals("Both");
+        //this.chooseKatakana = kanaMode.equals("Katakana") || kanaMode.equals("Both");
+
+        kanaManager = new KanaManager(kanaMode);
 
         startGame();
     }
+    
     public void startGame() {
         // Wait for layout sizing if needed
         if (getWidth() == 0 || getHeight() == 0) {
@@ -104,6 +109,7 @@ public class GamePanel extends JPanel implements ActionListener{
         showNewLevelText();
         timer.start();
     }
+
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.drawImage(backgroundImage1, 0, 0, getWidth(), getHeight(), this); //background
@@ -126,6 +132,7 @@ public class GamePanel extends JPanel implements ActionListener{
             g.drawString(newLevelString, x, y);
         }*/
     }
+
     public void drawHeaderBar(Graphics g) {
         int screenWidth = getWidth();
     
@@ -151,10 +158,12 @@ public class GamePanel extends JPanel implements ActionListener{
         g.setFont(new Font("Ink Free", Font.BOLD, 30));
         g.drawString("Accuracy: " + getAccuracy() + "%", screenWidth - 235, 30);
     }
+
     public int getAccuracy() {
         if (total == 0) return 0;
         return score / total;
     }
+
     public void draw(Graphics g) {
         if (running) {
             drawHeaderBar(g);
@@ -185,6 +194,7 @@ public class GamePanel extends JPanel implements ActionListener{
             gameOver(g); 
         }   
     }
+
     public void newKana() { 
         int unitsWide = getWidth() / GameConstants.UNIT_SIZE;
         int unitsHigh = getHeight() / GameConstants.UNIT_SIZE;
@@ -200,8 +210,10 @@ public class GamePanel extends JPanel implements ActionListener{
         } while (isOnSnake(kanaX, kanaY));
 
         // random kana
-        randomKana();
+        correctKana = kanaManager.randomKana();
+        showFurigana();
     }
+
     private boolean isOnSnake(int x, int y) {
         // doesn't let kana be placed where snake body is
         for (int i = 0; i < bodyParts; i++) {
@@ -211,20 +223,7 @@ public class GamePanel extends JPanel implements ActionListener{
         }
         return false;
     }
-    public void randomKana() {
-        if (chooseHiragana && chooseKatakana) { // hiragana and katakana
-            int temp = random.nextInt(2); // 0 = hiragana, 1 = katakana
-            if (temp == 0) correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size())); // hiragana
-            else correctKana = Kana.katakana.get(random.nextInt(Kana.katakana.size())); // katakana
-        } 
-        else if (chooseKatakana) { // only katakana
-            correctKana = Kana.katakana.get(random.nextInt(Kana.katakana.size()));
-        }
-        else { // only hiragana
-            correctKana = Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
-        }
-        showFurigana();
-    }
+
     public void move() {
         movedThisTick = true;
         // shifting body parts of snake
@@ -248,6 +247,7 @@ public class GamePanel extends JPanel implements ActionListener{
                 break;
         }
     }
+
     public void checkKana () {
         // head postion == kana postion
         if ((x[0] == kanaX) && (y[0] == kanaY)) { 
@@ -265,6 +265,7 @@ public class GamePanel extends JPanel implements ActionListener{
             newKana();
         }
     }
+
     public void showNewLevelText() {
         /*
         LEVEL   DELAY 
@@ -284,6 +285,7 @@ public class GamePanel extends JPanel implements ActionListener{
         clearNewLevelText.setRepeats(false); // timer only triggers once
         clearNewLevelText.start();
     }
+
     public void showFurigana() {
         newFuriganaCondition = true;
         furiganaString = correctKana.romaji;
@@ -295,6 +297,7 @@ public class GamePanel extends JPanel implements ActionListener{
         clearFuriganaText.setRepeats(false);
         clearFuriganaText.start();
     }
+
     public void checkCollision() {
         // check if head collides w/ body, iterate through body parts
         for (int i = bodyParts; i > 0; i--) { 
@@ -322,6 +325,7 @@ public class GamePanel extends JPanel implements ActionListener{
             timer.stop();
         }
     }
+
     public void checkClick(int x, int y) {
         // play again button
         if (!running) { // top left origin
@@ -337,6 +341,7 @@ public class GamePanel extends JPanel implements ActionListener{
             }
         }
     }
+
     public void resetGame() {
         score = 0;
         bodyParts = 6;
@@ -352,6 +357,7 @@ public class GamePanel extends JPanel implements ActionListener{
 
         startGame();
     }
+
     private void startHome() {
         frame.remove(this); // remove game screen
         HomeScreen homeScreen = new HomeScreen(frame);
@@ -360,6 +366,7 @@ public class GamePanel extends JPanel implements ActionListener{
         homeScreen.requestFocusInWindow();
         frame.validate();
     }
+
     public void gameOver(Graphics g) {
         // game over text
         g.setColor(Color.RED);
@@ -403,6 +410,7 @@ public class GamePanel extends JPanel implements ActionListener{
         g.drawString("Home", homeButtonX, homeButtonY); 
         homeButtonY = homeButtonY - metricsHome.getAscent();
     }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if (running) {
@@ -448,5 +456,4 @@ public class GamePanel extends JPanel implements ActionListener{
             movedThisTick = false; // blocks multiple changes within one tick
         }
     }
-
 }

@@ -43,35 +43,34 @@ public class MenuScreen extends JPanel {
         ImageIcon backgroundIcon = new ImageIcon(getClass().getResource("/res/images/background1.jpg"));
         backgroundImage = backgroundIcon.getImage();
 
+        Icon checkedIcon = new ImageIcon(getClass().getResource("/res/images/checked_checkbox.png"));
+        Icon uncheckedIcon = new ImageIcon(getClass().getResource("/res/images/unchecked_checkbox.png"));
+
         // No Death checkbox
         // make checkbox
         noDeathCheckBox = new JCheckBox("No-Death Mode");
+        noDeathCheckBox.setVerticalTextPosition(SwingConstants.TOP);
         noDeathCheckBox.setOpaque(false);
         noDeathCheckBox.setFocusPainted(false); // removes focus box
         if (GameSettings.isNoDeathMode()) noDeathCheckBox.setForeground(Color.WHITE); // no death ON
         else noDeathCheckBox.setForeground(Color.RED); // no death OFF
         noDeathCheckBox.setFont(new Font("Ink Free", Font.BOLD, 50));
-        noDeathCheckBox.setIconTextGap(15);
-
-        // reflect current saved setting
-        noDeathCheckBox.setSelected(GameSettings.isNoDeathMode());
 
         // position it
         noDeathCheckBox.setBounds(GameConstants.SCREEN_WIDTH - 400, 20, 450, 80); // x, y, width, height
+
+        // reflect current saved setting
+        boolean selected = GameSettings.isNoDeathMode();
+        noDeathCheckBox.setSelected(selected);
+        setCheckBox(selected, checkedIcon, uncheckedIcon);
+
         add(noDeathCheckBox);
 
         // allow updates to it
         noDeathCheckBox.addActionListener(e -> {
-            boolean selected = noDeathCheckBox.isSelected();
-            GameSettings.setDeathMode(selected);
-
-            // update the checkbox text color
-            if (selected) {
-                noDeathCheckBox.setForeground(Color.WHITE); // No-death ON
-            } else {
-                noDeathCheckBox.setForeground(Color.RED);   // No-death OFF
-            }
-            repaint(); // refresh the screen with new color
+            boolean isSelected = noDeathCheckBox.isSelected();
+            GameSettings.setDeathMode(isSelected);
+            setCheckBox(isSelected, checkedIcon, uncheckedIcon);
         });
 
         addMouseListener(new MouseAdapter() {
@@ -80,6 +79,17 @@ public class MenuScreen extends JPanel {
                 checkClick(e.getX(), e.getY());
             }
         });
+    }
+
+    private void setCheckBox(boolean selected, Icon checkedIcon, Icon uncheckedIcon) {
+        if (selected) {
+            noDeathCheckBox.setForeground(Color.WHITE); // No-death ON
+            noDeathCheckBox.setIcon(checkedIcon);
+        } else {
+            noDeathCheckBox.setForeground(Color.RED);   // No-death OFF
+            noDeathCheckBox.setIcon(uncheckedIcon);
+        }
+        repaint(); // refresh the screen with new color
     }
 
     private void checkClick(int x, int y) {

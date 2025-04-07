@@ -60,6 +60,7 @@ public class GamePanel extends JPanel implements ActionListener{
     boolean chooseKatakana;
     Kana correctKana;
     boolean newFuriganaCondition = false;
+    private Timer furiganaTimer;
     String furiganaString = "";
 
     private KanaManager kanaManager;
@@ -124,12 +125,24 @@ public class GamePanel extends JPanel implements ActionListener{
         draw(g);
 
         if (newFuriganaCondition) { // show furigana text
-            g.setColor(Color.YELLOW);
             g.setFont(new Font("Ink Free", Font.BOLD, 60));
-            FontMetrics metricsNewLevel = g.getFontMetrics();
-            int x = (getWidth() - metricsNewLevel.stringWidth(furiganaString)) / 2;
-            int y = (getHeight() / 2 - metricsNewLevel.getAscent());
+            FontMetrics metrics = g.getFontMetrics();
+            int x = (getWidth() - metrics.stringWidth(furiganaString)) / 2;
+            int y = (getHeight() / 2 - metrics.getAscent());
+
+            // draw outline (black)
+            g.setColor(Color.BLACK);
+            for (int dx = -2; dx <= 2; dx++) {
+                for (int dy = -2; dy <= 2; dy++) {
+                    if (dx != 0 || dy != 0) {
+                        g.drawString(furiganaString, x + dx, y + dy);
+                    }
+                }
+            }
+            // draw main text (yellow)
+            g.setColor(Color.YELLOW);
             g.drawString(furiganaString, x, y);
+
         }
         /*if (newLevelCondition) { // new level text
             g.setColor(Color.YELLOW);
@@ -150,11 +163,11 @@ public class GamePanel extends JPanel implements ActionListener{
 
         // Centered romaji prompt
         g.setColor(Color.WHITE);
-        g.setFont(new Font("Ink Free", Font.BOLD, 40));
+        g.setFont(new Font("Ink Free", Font.BOLD, 60));
         FontMetrics metrics = g.getFontMetrics();
         String prompt = "Find: " + correctKana.romaji;
         int x = (screenWidth - metrics.stringWidth(prompt)) / 2;
-        g.drawString(prompt, x, 50);
+        g.drawString(prompt, x, 70);
 
         // Score (left)
         g.setColor(Color.CYAN);
@@ -298,12 +311,17 @@ public class GamePanel extends JPanel implements ActionListener{
         newFuriganaCondition = true;
         furiganaString = correctKana.romaji;
         repaint();
-        Timer clearFuriganaText = new Timer(1000, e -> {
+
+        if (furiganaTimer != null && furiganaTimer.isRunning()) {
+            furiganaTimer.stop();
+        }
+
+        furiganaTimer = new Timer(1500, e -> {
             newFuriganaCondition = false;
             repaint();
         });
-        clearFuriganaText.setRepeats(false);
-        clearFuriganaText.start();
+        furiganaTimer.setRepeats(false);
+        furiganaTimer.start();
     }
 
     public void checkCollision() {

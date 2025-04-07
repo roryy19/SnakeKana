@@ -29,14 +29,51 @@ public class MenuScreen extends JPanel {
     private int blueButtonWidth;
     private int blueButtonHeight;
 
+    private JCheckBox noDeathCheckBox;
+
     private Image backgroundImage;
     
 
     public MenuScreen(JFrame frame) {
         this.frame = frame;
         setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
+
+        setLayout(null);
+
         ImageIcon backgroundIcon = new ImageIcon(getClass().getResource("/res/images/background1.jpg"));
         backgroundImage = backgroundIcon.getImage();
+
+        // No Death checkbox
+        // make checkbox
+        noDeathCheckBox = new JCheckBox("No-Death Mode");
+        noDeathCheckBox.setOpaque(false);
+        noDeathCheckBox.setFocusPainted(false); // removes focus box
+        if (GameSettings.isNoDeathMode()) noDeathCheckBox.setForeground(Color.WHITE); // no death ON
+        else noDeathCheckBox.setForeground(Color.RED); // no death OFF
+        noDeathCheckBox.setFont(new Font("Ink Free", Font.BOLD, 50));
+        noDeathCheckBox.setIconTextGap(15);
+
+        // reflect current saved setting
+        noDeathCheckBox.setSelected(GameSettings.isNoDeathMode());
+
+        // position it
+        noDeathCheckBox.setBounds(GameConstants.SCREEN_WIDTH - 400, 20, 450, 80); // x, y, width, height
+        add(noDeathCheckBox);
+
+        // allow updates to it
+        noDeathCheckBox.addActionListener(e -> {
+            boolean selected = noDeathCheckBox.isSelected();
+            GameSettings.setDeathMode(selected);
+
+            // update the checkbox text color
+            if (selected) {
+                noDeathCheckBox.setForeground(Color.WHITE); // No-death ON
+            } else {
+                noDeathCheckBox.setForeground(Color.RED);   // No-death OFF
+            }
+            repaint(); // refresh the screen with new color
+        });
+
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -44,6 +81,7 @@ public class MenuScreen extends JPanel {
             }
         });
     }
+
     private void checkClick(int x, int y) {
         // home button
         if (x >= homeButtonX && x <= (homeButtonX + homeButtonWidth) && 
@@ -66,6 +104,7 @@ public class MenuScreen extends JPanel {
             changeColor(Color.BLUE);
         }
     }
+
     private void startHome() {
         frame.remove(this); // remove menu screen
         HomeScreen homeScreen = new HomeScreen(frame);
@@ -74,9 +113,11 @@ public class MenuScreen extends JPanel {
         homeScreen.requestFocusInWindow();
         frame.validate();
     }
+
     private void changeColor(Color color) {
         GameSettings.setSnakeColor(color);
     }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -86,7 +127,12 @@ public class MenuScreen extends JPanel {
         g.drawImage(backgroundImage, backgroundImage.getWidth(this) - 10, backgroundImage.getHeight(this) - 10, this);*/
         drawHomeButton(g); // home button
         drawSnakeColorButtons(g); // choose snake color buttons
+
+        // top divider line
+        g.setColor(new Color(255, 255, 255, 180));
+        g.fillRect(0, 100, getWidth(), 5);
     }
+
     public void drawHomeButton(Graphics g) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
@@ -98,6 +144,7 @@ public class MenuScreen extends JPanel {
         g.drawString("Home", homeButtonX, homeButtonY); 
         homeButtonY = homeButtonY - metricsHome.getAscent(); // make Y coord top of text not middle for clicking
     } 
+
     private void drawSnakeColorButtons(Graphics g) {
         // choose snake text
         g.setColor(Color.WHITE);

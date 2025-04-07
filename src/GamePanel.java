@@ -47,6 +47,7 @@ public class GamePanel extends JPanel implements ActionListener{
     char direction = 'R'; // snake begins game going right
 
     boolean running = false;
+    boolean isPaused = false;
     Timer timer;
     Random random;
 
@@ -62,6 +63,7 @@ public class GamePanel extends JPanel implements ActionListener{
     String furiganaString = "";
 
     private KanaManager kanaManager;
+    private PauseOverlay pauseOverlay;
 
     public GamePanel(JFrame frame, String kanaMode) {
         this.frame = frame;
@@ -84,6 +86,12 @@ public class GamePanel extends JPanel implements ActionListener{
         //this.chooseKatakana = kanaMode.equals("Katakana") || kanaMode.equals("Both");
 
         kanaManager = new KanaManager(kanaMode);
+
+        pauseOverlay = new PauseOverlay(this);
+        pauseOverlay.setBounds(0, 0, GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT);
+        pauseOverlay.setVisible(false);
+        this.setLayout(null);
+        this.add(pauseOverlay);
 
         startGame();
     }
@@ -299,6 +307,24 @@ public class GamePanel extends JPanel implements ActionListener{
     }
 
     public void checkCollision() {
+        // no death mode ON, no collions are ignored
+        if (GameSettings.isNoDeathMode()) {
+            if (x[0] < 0) {
+                x[0] = getWidth() - GameConstants.UNIT_SIZE;
+            }
+            if (x[0] > getWidth() - GameConstants.UNIT_SIZE) {
+                x[0] = 0;
+            }
+            if (y[0] < topBarHeight) {
+                y[0] = getHeight() - GameConstants.UNIT_SIZE;
+            }
+            if (y[0] > getHeight() - GameConstants.UNIT_SIZE) {
+                y[0] = topBarHeight;
+            }
+            return;
+        }
+
+        // no death mode OFF, so collisions CAN happen
         // check if head collides w/ body, iterate through body parts
         for (int i = bodyParts; i > 0; i--) { 
             if ((x[0] == x[i]) && (y[0] == y[i])) { // one part of body collided w/ head
@@ -358,13 +384,24 @@ public class GamePanel extends JPanel implements ActionListener{
         startGame();
     }
 
-    private void startHome() {
+    public void startHome() {
         frame.remove(this); // remove game screen
         HomeScreen homeScreen = new HomeScreen(frame);
         frame.add(homeScreen);
         frame.pack();
         homeScreen.requestFocusInWindow();
         frame.validate();
+    }
+
+    public void pauseGame() {
+        timer.stop();
+        pauseOverlay.setVisible(true);
+        pauseOverlay.requestFocusInWindow();
+    }
+
+    public void resumeGame() {
+        pauseOverlay.setVisible(false);
+        timer.start();
     }
 
     public void gameOver(Graphics g) {
@@ -450,6 +487,12 @@ public class GamePanel extends JPanel implements ActionListener{
                 case KeyEvent.VK_S:
                     if (direction != 'U') { 
                         direction = 'D';
+                    }
+                    break;
+                case KeyEvent.VK_ESCAPE:
+                    if(running) {
+                        pauseGame();
+                        return;
                     }
                     break;
             }

@@ -2,13 +2,21 @@ import java.awt.*;
 
 public class GameSettings {
     private static Color snakeColor = new Color(23, 102, 31); // default color
+    private static boolean noDeathMode = false;
 
-    // set snake color
+    // snake color
     public static void setSnakeColor(Color newColor) {
         snakeColor = newColor;
     }
-    // get snake color
     public static Color getSnakeColor() {
         return snakeColor;
+    }
+
+    // No Death mode
+    public static void setDeathMode(boolean value) {
+        noDeathMode = value;
+    }
+    public static boolean isNoDeathMode() {
+        return noDeathMode;
     }
 }

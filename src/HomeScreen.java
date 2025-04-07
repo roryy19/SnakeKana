@@ -44,8 +44,11 @@ public class HomeScreen extends JPanel {
         bothButton = new JRadioButton("Both");
 
         hiraganaButton.setOpaque(false);
+        hiraganaButton.setFocusPainted(false); // removes focus box
         katakanaButton.setOpaque(false);
+        katakanaButton.setFocusPainted(false);
         bothButton.setOpaque(false);
+        bothButton.setFocusPainted(false); 
 
         // Group them
         modeGroup = new ButtonGroup();

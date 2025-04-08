@@ -1,6 +1,8 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+
+import java.util.ArrayList;
 import java.util.Random;
 
 public class GamePanel extends JPanel implements ActionListener{
@@ -48,6 +50,7 @@ public class GamePanel extends JPanel implements ActionListener{
 
     boolean running = false;
     boolean isPaused = false;
+    boolean victoryStatus = false;
     Timer timer;
     Random random;
 
@@ -59,6 +62,7 @@ public class GamePanel extends JPanel implements ActionListener{
     boolean chooseHiragana;
     boolean chooseKatakana;
     Kana correctKana;
+    ArrayList<Kana> gottenCorrect = new ArrayList<>();
     boolean newFuriganaCondition = false;
     private Timer furiganaTimer;
     String furiganaString = "";
@@ -182,7 +186,8 @@ public class GamePanel extends JPanel implements ActionListener{
 
     public int getAccuracy() {
         if (total == 0) return 0;
-        return score / total;
+        double fraction = (double)score / total; // get decimal
+        return (int)(fraction * 100);
     }
 
     public void draw(Graphics g) {
@@ -211,12 +216,21 @@ public class GamePanel extends JPanel implements ActionListener{
             g.setFont(new Font("Ink Free", Font.BOLD, 25));
             FontMetrics metricsLevel = getFontMetrics(g.getFont());
             g.drawString("Level: " + (currentLevel + 1), (getWidth() - metricsLevel.stringWidth("Level: " + currentLevel + 1)) / 2 + 125, g.getFont().getSize()); //right
+        } else if (victoryStatus) {
+            startVictory(g);
         } else {
             gameOver(g); 
         }   
     }
 
     public void newKana() { 
+        // if all kana have been gotten correct
+        if (gottenCorrect.size() == 5/*kanaManager.totalPossibleKana()*/) {
+            victoryStatus = true;
+            running = false;
+            return;
+        }
+
         int unitsWide = getWidth() / GameConstants.UNIT_SIZE;
         int unitsHigh = getHeight() / GameConstants.UNIT_SIZE;
 
@@ -231,7 +245,10 @@ public class GamePanel extends JPanel implements ActionListener{
         } while (isOnSnake(kanaX, kanaY));
 
         // random kana
-        correctKana = kanaManager.randomKana();
+        // do not pick kana already gotten correct
+        do {
+            correctKana = kanaManager.randomKana();
+        } while (gottenCorrect.contains(correctKana));
         showFurigana();
     }
 
@@ -272,8 +289,10 @@ public class GamePanel extends JPanel implements ActionListener{
     public void checkKana () {
         // head postion == kana postion
         if ((x[0] == kanaX) && (y[0] == kanaY)) { 
+            gottenCorrect.add(correctKana);
             bodyParts++;
             score++;
+            total++;
             highScore = Math.max(highScore, score);
             if ((score % 10 )== 0 && DELAY > 40) { // every 10 kanas correct, increase delay as long as it greater than 30
                 currentLevel++;
@@ -388,6 +407,8 @@ public class GamePanel extends JPanel implements ActionListener{
 
     public void resetGame() {
         score = 0;
+        total = 0;
+        gottenCorrect.clear();
         bodyParts = 6;
         for (int i = 0; i < bodyParts; i++) { // make previous snake not stay on screen
             x[i] = -1;
@@ -420,6 +441,42 @@ public class GamePanel extends JPanel implements ActionListener{
     public void resumeGame() {
         pauseOverlay.setVisible(false);
         timer.start();
+    }
+
+    public void startVictory(Graphics g) {
+        // congrats text
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free",Font.BOLD, 100));
+        FontMetrics metricsCongrats = getFontMetrics(g.getFont());
+        g.drawString("Congrats!", (getWidth() - metricsCongrats.stringWidth("Congrats!")) / 2, getHeight() / 3);
+
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free",Font.BOLD, 60));
+        FontMetrics metricsCongrats2 = getFontMetrics(g.getFont());
+        g.drawString("You got all the characters!", (getWidth() - metricsCongrats2.stringWidth("You got all the characters!")) / 2, getHeight() / 3 + 100);
+
+        // accuracy
+        g.setColor(new Color(0, 153, 153));
+        g.setFont(new Font("Ink Free", Font.BOLD, 50));
+        FontMetrics metricsAccuracy = getFontMetrics(g.getFont());
+        g.drawString("Accuracy: " + getAccuracy() + "%", (getWidth() - metricsAccuracy.stringWidth("Accuracy: " + getAccuracy() + "%")) / 2, 600);
+        
+        g.setColor(new Color(0, 153, 153));
+        g.setFont(new Font("Ink Free", Font.BOLD, 50));
+        FontMetrics metricsAccuracy2 = getFontMetrics(g.getFont());
+        g.drawString("Correct: " + score + ", Total: " + total, (getWidth() - metricsAccuracy2.stringWidth("Correct: " + score + ", Total: " + total)) / 2, 675);
+
+
+        // home button
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 75));
+        FontMetrics metricsHome = g.getFontMetrics();
+        homeButtonX = 10; 
+        homeButtonY = 100; 
+        homeButtonWidth = metricsHome.stringWidth("Home"); 
+        homeButtonHeight = metricsHome.getHeight(); 
+        g.drawString("Home", homeButtonX, homeButtonY); 
+        homeButtonY = homeButtonY - metricsHome.getAscent();
     }
 
     public void gameOver(Graphics g) {

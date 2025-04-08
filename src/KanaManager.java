@@ -28,4 +28,10 @@ public class KanaManager {
             return Kana.hiragana.get(random.nextInt(Kana.hiragana.size()));
         }
     }
+
+    public int totalPossibleKana() {
+        if (chooseHiragana && chooseKatakana) return Kana.hiragana.size() + Kana.katakana.size();
+        else if (chooseHiragana) return Kana.hiragana.size();
+        else return Kana.katakana.size();
+    }
 }

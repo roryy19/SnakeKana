@@ -131,10 +131,7 @@ public class MenuScreen extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this); // dirt background
-        /*g.drawImage(backgroundImage, backgroundImage.getWidth(this) - 10, 0, this); 
-        g.drawImage(backgroundImage, 0, backgroundImage.getHeight(this) - 10, this);
-        g.drawImage(backgroundImage, backgroundImage.getWidth(this) - 10, backgroundImage.getHeight(this) - 10, this);*/
+        g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this); // background
         drawHomeButton(g); // home button
         drawSnakeColorButtons(g); // choose snake color buttons
 

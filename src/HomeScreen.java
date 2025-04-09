@@ -22,13 +22,17 @@ public class HomeScreen extends JPanel {
     private int menuButtonWidth;
     private int menuButtonHeight;
 
+    private int chartButtonX;
+    private int chartButtonY;
+    private int chartButtonWidth;
+    private int chartButtonHeight;
+
     private Image backgroundImage1;
 
     public HomeScreen(JFrame frame) {
         this.frame = frame;
         setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
 
-        //ImageIcon backgroundIcon = new ImageIcon("src/res/images/dirt-background.PNG");
         ImageIcon backgroundIcon = new ImageIcon(getClass().getResource("/res/images/background1.jpg"));
         backgroundImage1 = backgroundIcon.getImage();
         setBackground(Color.BLACK);
@@ -95,6 +99,11 @@ public class HomeScreen extends JPanel {
             y >= menuButtonY && y <= (menuButtonY + menuButtonHeight)) {
             startMenu();
         }
+        // chart/quiz button
+        if (x >= chartButtonX && x <= (chartButtonX + chartButtonWidth) &&
+            y >= chartButtonY && y <= (chartButtonY + chartButtonHeight)) {
+            startChart();
+        }
     }
 
     private void startGame() {
@@ -121,16 +130,26 @@ public class HomeScreen extends JPanel {
         frame.validate();
     }
 
+    private void startChart() {
+        frame.remove(this);
+
+        setMode();
+
+        ChartScreen chartchartScreen = new ChartScreen(frame);
+        frame.add(chartchartScreen);
+        frame.pack();
+        chartchartScreen.requestFocusInWindow();
+        frame.validate();
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(backgroundImage1, 0, 0, getWidth(), getHeight(), this); // dirt background
-        /*g.drawImage(backgroundImage, backgroundImage.getWidth(this) - 10, 0, this); 
-        g.drawImage(backgroundImage, 0, backgroundImage.getHeight(this) - 10, this);
-        g.drawImage(backgroundImage, backgroundImage.getWidth(this) - 10, backgroundImage.getHeight(this) - 10, this);*/
+        g.drawImage(backgroundImage1, 0, 0, getWidth(), getHeight(), this); // background
         drawSnakeKana(g); // SnakeKana title
         drawPlayButton(g); // play button
         drawMenuButton(g); // menu button
+        drawQuizChartButton(g); // chart / quiz button
     }
 
     public void setMode() {
@@ -175,17 +194,48 @@ public class HomeScreen extends JPanel {
         playButtonHeight = metricsPlay.getHeight(); // height of play text
         g.drawString("Play", playButtonX, playButtonY); 
         playButtonY = playButtonY - metricsPlay.getAscent(); // make Y coord top of text not middle for clicking
+        
+        // Japanese (あそぶ)
+        g.setFont(new Font("Dialog", Font.PLAIN, 40)); 
+        FontMetrics metricsJp = g.getFontMetrics(); 
+        int playButtonJ = metricsJp.stringWidth("(あそぶ)");
+        g.drawString("(あそぶ)", (GameConstants.SCREEN_WIDTH - playButtonJ) / 2, playButtonY - 30);
     }
 
     private void drawMenuButton(Graphics g) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsMenu = g.getFontMetrics();
-        menuButtonX = (GameConstants.SCREEN_WIDTH - metricsMenu.stringWidth("Menu")) / 2; // center on x axis
+        menuButtonX = 650; //(GameConstants.SCREEN_WIDTH - metricsMenu.stringWidth("Menu")) / 2; // center on x axis
         menuButtonY = (GameConstants.SCREEN_HEIGHT - 100); // bottom half of y axis
         menuButtonWidth = metricsMenu.stringWidth("Menu"); // width of menu text
         menuButtonHeight = metricsMenu.getHeight(); // height of menu text
         g.drawString("Menu", menuButtonX, menuButtonY); 
         menuButtonY = menuButtonY - metricsMenu.getAscent(); // make Y coord top of text not middle for clicking
+    }
+
+    private void drawQuizChartButton(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 50));
+        FontMetrics metricschart = g.getFontMetrics();
+
+        String line1 = "Kana Charts &";
+        String line2 = "Practice Quizzes";
+
+        // Position the first line
+        chartButtonX = 25;
+        chartButtonY = GameConstants.SCREEN_HEIGHT - 130;
+
+        // Draw first line
+        g.drawString(line1, chartButtonX, chartButtonY);
+
+        // Draw second line slightly below the first
+        int lineSpacing = metricschart.getHeight(); // spacing based on font height
+        g.drawString(line2, chartButtonX, chartButtonY + lineSpacing);
+
+        // Store button bounds for click detection
+        chartButtonWidth = Math.max(metricschart.stringWidth(line1), metricschart.stringWidth(line2));
+        chartButtonHeight = 2 * lineSpacing;
+        chartButtonY = chartButtonY - metricschart.getAscent(); // top Y for click detection
     }
 }

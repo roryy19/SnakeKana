@@ -445,6 +445,13 @@ public class GamePanel extends JPanel implements ActionListener{
 
     public void startVictory(Graphics g) {
         // congrats text
+        Graphics2D g2d = (Graphics2D) g;
+        
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font("Dialog",Font.PLAIN, 100));
+        FontMetrics metricsCongratsJ = getFontMetrics(g2d.getFont());
+        g2d.drawString("おめでとう!", (getWidth() - metricsCongratsJ.stringWidth("おめでとう!")) / 2, getHeight() / 3 - 80);
+
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free",Font.BOLD, 100));
         FontMetrics metricsCongrats = getFontMetrics(g.getFont());

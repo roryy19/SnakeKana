@@ -62,13 +62,20 @@ public class GamePanel extends JPanel implements ActionListener{
     boolean chooseHiragana;
     boolean chooseKatakana;
     Kana correctKana;
+    Kana wrongKana;
     ArrayList<Kana> gottenCorrect = new ArrayList<>();
     boolean newFuriganaCondition = false;
     private Timer furiganaTimer;
     String furiganaString = "";
+    int wrongAmount = 3;
+    private Timer choiceTimer;
+    boolean newChoiceCondition = false;
+    String choiceString = "";
 
     private KanaManager kanaManager;
     private PauseOverlay pauseOverlay;
+
+    private ArrayList<PlacedKana> placedKanas = new ArrayList<>();
 
     public GamePanel(JFrame frame, String kanaMode) {
         this.frame = frame;
@@ -116,7 +123,7 @@ public class GamePanel extends JPanel implements ActionListener{
         x[0] = GameConstants.SCREEN_WIDTH / 2;
         y[0] = (GameConstants.SCREEN_HEIGHT + GamePanel.topBarHeight) / 2;
 
-        newKana();
+        newKanas();
         running = true;
         timer = new Timer(DELAY, this);
         showNewLevelText();
@@ -130,9 +137,9 @@ public class GamePanel extends JPanel implements ActionListener{
 
         if (newFuriganaCondition) { // show furigana text
             g.setFont(new Font("Ink Free", Font.BOLD, 60));
-            FontMetrics metrics = g.getFontMetrics();
-            int x = (getWidth() - metrics.stringWidth(furiganaString)) / 2;
-            int y = (getHeight() / 2 - metrics.getAscent());
+            FontMetrics metricsFuri = g.getFontMetrics();
+            int x = (getWidth() - metricsFuri.stringWidth(furiganaString)) / 2;
+            int y = (getHeight() / 2 - metricsFuri.getAscent());
 
             // draw outline (black)
             g.setColor(Color.BLACK);
@@ -146,7 +153,27 @@ public class GamePanel extends JPanel implements ActionListener{
             // draw main text (yellow)
             g.setColor(Color.YELLOW);
             g.drawString(furiganaString, x, y);
+        }
 
+        if (newChoiceCondition) { // show result of user's kana choice
+            g.setFont(new Font("Ink Free", Font.BOLD, 60));
+            FontMetrics metricsChoice = g.getFontMetrics();
+            int x = (getWidth() - metricsChoice.stringWidth(choiceString)) / 2;
+            int y = 150;
+
+            // draw outline (black)
+            g.setColor(Color.BLACK);
+            for (int dx = -2; dx <= 2; dx++) {
+                for (int dy = -2; dy <= 2; dy++) {
+                    if (dx != 0 || dy != 0) {
+                        g.drawString(choiceString, x + dx, y + dy);
+                    }
+                }
+            }
+            // draw main text (yellow)
+            if (choiceString == "Correct!") g.setColor(Color.GREEN);
+            else g.setColor(Color.RED);
+            g.drawString(choiceString, x, y);
         }
         /*if (newLevelCondition) { // new level text
             g.setColor(Color.YELLOW);
@@ -193,9 +220,12 @@ public class GamePanel extends JPanel implements ActionListener{
     public void draw(Graphics g) {
         if (running) {
             drawHeaderBar(g);
-            // draw kana
-            g.drawImage(correctKana.image, kanaX - 10, kanaY - 15, GameConstants.UNIT_SIZE * 2, GameConstants.UNIT_SIZE * 2, this);
 
+            // draw kanas (correct and wrong)
+            for (PlacedKana pk : placedKanas) {
+                g.drawImage(pk.kana.image, pk.x - 10, pk.y - 15, GameConstants.UNIT_SIZE * 2, GameConstants.UNIT_SIZE * 2, this);
+            }
+            
             // iterate through all body parts of snake
             for (int i = 0; i < bodyParts; i++) {
                 if (i == 0) { // head of snake
@@ -223,14 +253,49 @@ public class GamePanel extends JPanel implements ActionListener{
         }   
     }
 
-    public void newKana() { 
-        // if all kana have been gotten correct
-        if (gottenCorrect.size() == 5/*kanaManager.totalPossibleKana()*/) {
+    public void newKanas() {
+
+        // if got all kanas
+        if (gottenCorrect.size() == kanaManager.totalPossibleKana()) {
             victoryStatus = true;
             running = false;
             return;
         }
+        // clear list for new kanas to fill with
+        placedKanas.clear();
 
+        // **** CORRECT KANA *****
+        getCoords();
+
+        // do not pick kana already gotten correct
+        do {
+            correctKana = kanaManager.randomKana();
+        } while (gottenCorrect.contains(correctKana));
+        
+        // add to array list
+        PlacedKana correctPK = new PlacedKana(kanaX, kanaY, correctKana, true);
+        placedKanas.add(correctPK);
+
+        // ***** INCORRECT KANA ******
+
+        // loop through amount of wrong kana that will show up
+        // make sure coords and kana have not been used yet
+        for(int i = 0; i < wrongAmount; i++) {
+            int tempX, tempY;
+            do {
+                getCoords();
+                tempX = kanaX;
+                tempY = kanaY;
+                wrongKana = kanaManager.randomKana();
+            } while (isOccupiedOrUsed(tempX, tempY, wrongKana));
+
+            PlacedKana wrongPK = new PlacedKana(kanaX, kanaY, wrongKana, false);
+            placedKanas.add(wrongPK);
+        }
+        showFurigana();
+    }
+
+    public void getCoords() {
         int unitsWide = getWidth() / GameConstants.UNIT_SIZE;
         int unitsHigh = getHeight() / GameConstants.UNIT_SIZE;
 
@@ -239,17 +304,21 @@ public class GamePanel extends JPanel implements ActionListener{
         int minY = (topBarHeight / GameConstants.UNIT_SIZE) + 1; // skip top bar
         int maxY = unitsHigh - 2; // skip bottom row
 
+        // random kana
         do {
             kanaX = (random.nextInt(maxX - minX + 1) + minX) * GameConstants.UNIT_SIZE;
             kanaY = (random.nextInt(maxY - minY + 1) + minY) * GameConstants.UNIT_SIZE;
         } while (isOnSnake(kanaX, kanaY));
+    }
 
-        // random kana
-        // do not pick kana already gotten correct
-        do {
-            correctKana = kanaManager.randomKana();
-        } while (gottenCorrect.contains(correctKana));
-        showFurigana();
+    // checks if the x and y is used for one kana OR the kana is used
+    public boolean isOccupiedOrUsed(int x, int y, Kana wrongKana) {
+        for (PlacedKana pk : placedKanas) {
+            if ((pk.x == x && pk.y == y) || (pk.kana == wrongKana)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isOnSnake(int x, int y) {
@@ -288,21 +357,23 @@ public class GamePanel extends JPanel implements ActionListener{
 
     public void checkKana () {
         // head postion == kana postion
-        if ((x[0] == kanaX) && (y[0] == kanaY)) { 
-            gottenCorrect.add(correctKana);
-            bodyParts++;
-            score++;
-            total++;
-            highScore = Math.max(highScore, score);
-            if ((score % 10 )== 0 && DELAY > 40) { // every 10 kanas correct, increase delay as long as it greater than 30
-                currentLevel++;
-                DELAY -= 10;
-                timer.stop();
-                timer = new Timer(DELAY, this);
-                timer.start();
-                showNewLevelText();
+        for (PlacedKana pk : placedKanas) {
+            if ((x[0] == pk.x) && (y[0] == pk.y)) {
+                // chose correct kana
+                if (pk.correct) { 
+                    showChoiceResult(true);
+                    gottenCorrect.add(correctKana);
+                    score++;
+                    total++;
+                    bodyParts++;
+                // chose incorrect kana
+                } else {
+                    showChoiceResult(false);
+                    total++;
+                }
+                newKanas();
+                return;
             }
-            newKana();
         }
     }
 
@@ -341,6 +412,27 @@ public class GamePanel extends JPanel implements ActionListener{
         });
         furiganaTimer.setRepeats(false);
         furiganaTimer.start();
+    }
+
+    public void showChoiceResult(boolean choice) {
+        newChoiceCondition = true;
+        if (choice) { // correct
+            choiceString = "Correct!";
+        } else { // wrong
+            choiceString = "Wrong.";
+        }
+        repaint();
+
+        if (choiceTimer != null && choiceTimer.isRunning()) {
+            choiceTimer.stop();
+        }
+
+        choiceTimer = new Timer(1500, e -> {
+            newChoiceCondition = false;
+            repaint();
+        });
+        choiceTimer.setRepeats(false);
+        choiceTimer.start();
     }
 
     public void checkCollision() {

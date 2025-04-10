@@ -11,7 +11,7 @@ public class GamePanel extends JPanel implements ActionListener{
     static final int topBarHeight = 100;
     int playAreaHeight;
     int GAME_UNITS; // amount of units that can fit on screen
-    int DELAY = 75;
+    // int DELAY = 75; // higher = slower game
     
     // body of snake
     final int x[] = new int[1000]; // snake wont be bigger than game
@@ -67,7 +67,7 @@ public class GamePanel extends JPanel implements ActionListener{
     boolean newFuriganaCondition = false;
     private Timer furiganaTimer;
     String furiganaString = "";
-    int wrongAmount = 3;
+    //int wrongAmount = 3;
     private Timer choiceTimer;
     boolean newChoiceCondition = false;
     String choiceString = "";
@@ -125,7 +125,7 @@ public class GamePanel extends JPanel implements ActionListener{
 
         newKanas();
         running = true;
-        timer = new Timer(DELAY, this);
+        timer = new Timer(GameSettings.getSnakeSpeed(), this);
         showNewLevelText();
         timer.start();
     }
@@ -280,7 +280,7 @@ public class GamePanel extends JPanel implements ActionListener{
 
         // loop through amount of wrong kana that will show up
         // make sure coords and kana have not been used yet
-        for(int i = 0; i < wrongAmount; i++) {
+        for(int i = 0; i < GameSettings.getWrongKanaAmount(); i++) {
             int tempX, tempY;
             do {
                 getCoords();
@@ -304,11 +304,15 @@ public class GamePanel extends JPanel implements ActionListener{
         int minY = (topBarHeight / GameConstants.UNIT_SIZE) + 1; // skip top bar
         int maxY = unitsHigh - 2; // skip bottom row
 
+        int attempts = 0;
+
         // random kana
         do {
             kanaX = (random.nextInt(maxX - minX + 1) + minX) * GameConstants.UNIT_SIZE;
             kanaY = (random.nextInt(maxY - minY + 1) + minY) * GameConstants.UNIT_SIZE;
-        } while (isOnSnake(kanaX, kanaY));
+            attempts++;
+            if (attempts > 100) break; // avoid inf loop
+        } while (isOnSnakeOrKana(kanaX, kanaY));
     }
 
     // checks if the x and y is used for one kana OR the kana is used
@@ -321,14 +325,32 @@ public class GamePanel extends JPanel implements ActionListener{
         return false;
     }
 
-    private boolean isOnSnake(int x, int y) {
+    private boolean isOnSnakeOrKana(int x, int y) {
         // doesn't let kana be placed where snake body is
         for (int i = 0; i < bodyParts; i++) {
             if (this.x[i] == x && this.y[i] == y) {
                 return true;
             }
         }
-        return false;
+        // don't place kana too close to snake head (5 units)
+        int distanceX = Math.abs(x - this.x[0]);
+        int distanceY = Math.abs(y - this.y[0]);
+
+        if ((distanceX <= GameConstants.UNIT_SIZE * 5) && (distanceY <= GameConstants.UNIT_SIZE * 5)) {
+            return true;
+        }
+
+        // don't place kana right next to another kana
+        for (PlacedKana pk : placedKanas) {
+            int distanceKanaX = Math.abs(x - pk.x);
+            int distanceKanaY = Math.abs(y - pk.y);
+            
+            if (distanceKanaX <= GameConstants.UNIT_SIZE && distanceKanaY <= GameConstants.UNIT_SIZE) {
+                return true;
+            }
+        }
+
+        return false; // good coords
     }
 
     public void move() {
@@ -362,7 +384,9 @@ public class GamePanel extends JPanel implements ActionListener{
                 // chose correct kana
                 if (pk.correct) { 
                     showChoiceResult(true);
-                    gottenCorrect.add(correctKana);
+                    if (!GameSettings.isInfiniteMode()) {
+                        gottenCorrect.add(correctKana);
+                    }
                     score++;
                     total++;
                     bodyParts++;
@@ -509,7 +533,6 @@ public class GamePanel extends JPanel implements ActionListener{
         direction = 'R';
         x[0] = 0; // set snake back to top left
         y[0] = 0;
-        DELAY = 75; // reset snake speed
         currentLevel = 0; // reset level
 
         startGame();
@@ -563,7 +586,7 @@ public class GamePanel extends JPanel implements ActionListener{
         g.setColor(new Color(0, 153, 153));
         g.setFont(new Font("Ink Free", Font.BOLD, 50));
         FontMetrics metricsAccuracy2 = getFontMetrics(g.getFont());
-        g.drawString("Correct: " + score + ", Total: " + total, (getWidth() - metricsAccuracy2.stringWidth("Correct: " + score + ", Total: " + total)) / 2, 675);
+        g.drawString("Correct: " + score + ", Total: " + total, (getWidth() - metricsAccuracy2.stringWidth("Correct: " + score + "   Total: " + total)) / 2, 675);
 
 
         // home button

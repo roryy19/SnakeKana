@@ -30,6 +30,13 @@ public class MenuScreen extends JPanel {
     private int blueButtonHeight;
 
     private JCheckBox noDeathCheckBox;
+    private JCheckBox infiniteCheckBox;
+
+    private JSlider speedSlider;
+    private JSlider kanaSlider;
+
+    boolean selectedND;
+    boolean selectedInf;
 
     private Image backgroundImage;
     
@@ -46,32 +53,40 @@ public class MenuScreen extends JPanel {
         Icon checkedIcon = new ImageIcon(getClass().getResource("/res/images/checked_checkbox.png"));
         Icon uncheckedIcon = new ImageIcon(getClass().getResource("/res/images/unchecked_checkbox.png"));
 
-        // No Death checkbox
-        // make checkbox
-        noDeathCheckBox = new JCheckBox("No-Death Mode");
-        noDeathCheckBox.setVerticalTextPosition(SwingConstants.TOP);
-        noDeathCheckBox.setOpaque(false);
-        noDeathCheckBox.setFocusPainted(false); // removes focus box
-        if (GameSettings.isNoDeathMode()) noDeathCheckBox.setForeground(Color.WHITE); // no death ON
-        else noDeathCheckBox.setForeground(Color.RED); // no death OFF
-        noDeathCheckBox.setFont(new Font("Ink Free", Font.BOLD, 50));
-
-        // position it
-        noDeathCheckBox.setBounds(GameConstants.SCREEN_WIDTH - 400, 20, 450, 80); // x, y, width, height
-
-        // reflect current saved setting
-        boolean selected = GameSettings.isNoDeathMode();
-        noDeathCheckBox.setSelected(selected);
-        setCheckBox(selected, checkedIcon, uncheckedIcon);
-
+        // No Death check box
+        noDeathCheckBox = createCustomCheckbox(
+            "No-Death Mode",
+            GameConstants.SCREEN_WIDTH - 400, 20,
+            GameSettings.isNoDeathMode(),
+            () -> GameSettings.setDeathMode(noDeathCheckBox.isSelected()),
+            checkedIcon, uncheckedIcon
+        );
         add(noDeathCheckBox);
 
-        // allow updates to it
-        noDeathCheckBox.addActionListener(e -> {
-            boolean isSelected = noDeathCheckBox.isSelected();
-            GameSettings.setDeathMode(isSelected);
-            setCheckBox(isSelected, checkedIcon, uncheckedIcon);
-        });
+        // Infinite mode check box
+        infiniteCheckBox = createCustomCheckbox(
+            "Infinite Mode",
+            GameConstants.SCREEN_WIDTH - 400, 100,
+            GameSettings.isInfiniteMode(),
+            () -> GameSettings.setInfiniteMode(infiniteCheckBox.isSelected()),
+            checkedIcon, uncheckedIcon
+        );
+        add(infiniteCheckBox);
+
+        // Snake speed slider
+        speedSlider = createCustomSlider(
+            "Snake Speed", 50, 800, 
+            GameSettings.getSnakeSpeedSliderValue(),
+            GameSettings::setSnakeSpeedSliderValue
+        );
+        add(speedSlider);
+
+        kanaSlider = createCustomSlider(
+            "Amount of \"Wrong\" Kana", 50, 650, 
+            GameSettings.getWrongKanaAmount(),
+            GameSettings::setWrongKanaAmount
+        );
+        add(kanaSlider);
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -81,15 +96,51 @@ public class MenuScreen extends JPanel {
         });
     }
 
-    private void setCheckBox(boolean selected, Icon checkedIcon, Icon uncheckedIcon) {
-        if (selected) {
-            noDeathCheckBox.setForeground(Color.WHITE); // No-death ON
-            noDeathCheckBox.setIcon(checkedIcon);
-        } else {
-            noDeathCheckBox.setForeground(Color.RED);   // No-death OFF
-            noDeathCheckBox.setIcon(uncheckedIcon);
-        }
-        repaint(); // refresh the screen with new color
+    private JCheckBox createCustomCheckbox(String label, int x, int y, boolean selected, Runnable onToggle, Icon checkedIcon, Icon uncheckedIcon) {
+        JCheckBox box = new JCheckBox(label);
+        box.setBounds(x, y, 450, 80);
+        box.setFont(new Font("Ink Free", Font.BOLD, 50));
+        box.setOpaque(false);
+        box.setFocusPainted(false);
+        box.setVerticalTextPosition(SwingConstants.TOP);
+        box.setSelected(selected);
+        box.setIcon(selected ? checkedIcon : uncheckedIcon);
+        box.setForeground(selected ? Color.WHITE : Color.RED);
+    
+        box.addActionListener(e -> {
+            boolean isSelected = box.isSelected();
+            box.setIcon(isSelected ? checkedIcon : uncheckedIcon);
+            box.setForeground(isSelected ? Color.WHITE : Color.RED);
+            onToggle.run(); // apply the setting change
+        });
+    
+        return box;
+    }
+    
+    private JSlider createCustomSlider(String label, int x, int y, int value, java.util.function.IntConsumer onValueChanged) {
+        JSlider slider = new JSlider(JSlider.HORIZONTAL, 1, 10, value); // goes from 1 to 10, default is 5
+
+        int centerX = (GameConstants.SCREEN_WIDTH - 800) / 2;
+        slider.setBounds(x, y, 800, 100);
+        slider.setFont(new Font("Ink Free", Font.BOLD, 50));
+        slider.setOpaque(false);
+        slider.setMajorTickSpacing(1);
+        slider.setPaintTicks(true);
+        slider.setPaintLabels(true);
+
+        JLabel speedLabel = new JLabel(label, SwingConstants.CENTER);
+        speedLabel.setFont(new Font("Ink Free", Font.BOLD, 60));
+        speedLabel.setForeground(Color.WHITE);
+        speedLabel.setBounds(centerX, y - 60, 800, 90); // Positioned above slider
+
+        add(speedLabel);
+
+        slider.addChangeListener(e -> {
+            int sliderValue = slider.getValue();
+            onValueChanged.accept(sliderValue);
+        });
+
+        return slider;
     }
 
     private void checkClick(int x, int y) {
@@ -97,7 +148,7 @@ public class MenuScreen extends JPanel {
         if (x >= homeButtonX && x <= (homeButtonX + homeButtonWidth) && 
             y >= homeButtonY && y <= (homeButtonY + homeButtonHeight)) {
             startHome();
-        }
+        }/*
         // snake green
         if (x >= greenButtonX && x <= (greenButtonX + greenButtonWidth) && 
             y >= greenButtonY && y <= (greenButtonY + greenButtonHeight)) {
@@ -112,7 +163,7 @@ public class MenuScreen extends JPanel {
         if (x >= blueButtonX && x <= (blueButtonX + blueButtonWidth) && 
             y >= blueButtonY && y <= (blueButtonY + blueButtonHeight)) {
             changeColor(Color.BLUE);
-        }
+        }*/
     }
 
     private void startHome() {
@@ -137,7 +188,7 @@ public class MenuScreen extends JPanel {
 
         // top divider line
         g.setColor(new Color(255, 255, 255, 180));
-        g.fillRect(0, 100, getWidth(), 5);
+        g.fillRect(0, 170, getWidth(), 5);
     }
 
     public void drawHomeButton(Graphics g) {
@@ -153,12 +204,13 @@ public class MenuScreen extends JPanel {
     } 
 
     private void drawSnakeColorButtons(Graphics g) {
+        /*
         // choose snake text
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 50));
         FontMetrics metricsChoose = g.getFontMetrics();
         chooseX = (GameConstants.SCREEN_WIDTH - metricsChoose.stringWidth("Choose Snake Color:")) / 2;; 
-        chooseY = 200; 
+        chooseY = 300; 
         g.drawString("Choose Snake Color:", chooseX, chooseY); 
 
         // green snake button
@@ -166,7 +218,7 @@ public class MenuScreen extends JPanel {
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsGreen = g.getFontMetrics();
         greenButtonX = (GameConstants.SCREEN_WIDTH - metricsGreen.stringWidth("Green")) / 2;; 
-        greenButtonY = 300; 
+        greenButtonY = 400; 
         greenButtonWidth = metricsGreen.stringWidth("Green");
         greenButtonHeight = metricsGreen.getHeight(); 
         g.drawString("Green", greenButtonX, greenButtonY); 
@@ -177,7 +229,7 @@ public class MenuScreen extends JPanel {
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsRed = g.getFontMetrics();
         redButtonX = (GameConstants.SCREEN_WIDTH - metricsRed.stringWidth("Red")) / 2;; 
-        redButtonY = 400; 
+        redButtonY = 500; 
         redButtonWidth = metricsRed.stringWidth("Red");
         redButtonHeight = metricsRed.getHeight(); 
         g.drawString("Red", redButtonX, redButtonY); 
@@ -188,10 +240,11 @@ public class MenuScreen extends JPanel {
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsBlue = g.getFontMetrics();
         blueButtonX = (GameConstants.SCREEN_WIDTH - metricsBlue.stringWidth("Blue")) / 2;; 
-        blueButtonY = 500; 
+        blueButtonY = 600; 
         blueButtonWidth = metricsBlue.stringWidth("Blue");
         blueButtonHeight = metricsBlue.getHeight(); 
         g.drawString("Blue", blueButtonX, blueButtonY); 
         blueButtonY = blueButtonY - metricsBlue.getAscent();
+        */
     }
 }

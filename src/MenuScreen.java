@@ -75,14 +75,14 @@ public class MenuScreen extends JPanel {
 
         // Snake speed slider
         speedSlider = createCustomSlider(
-            "Snake Speed", 50, 800, 
+            1, "Snake Speed", 50, 800, 
             GameSettings.getSnakeSpeedSliderValue(),
             GameSettings::setSnakeSpeedSliderValue
         );
         add(speedSlider);
 
         kanaSlider = createCustomSlider(
-            "Amount of \"Wrong\" Kana", 50, 650, 
+            0, "Amount of \"Wrong\" Kana", 50, 650, 
             GameSettings.getWrongKanaAmount(),
             GameSettings::setWrongKanaAmount
         );
@@ -117,8 +117,8 @@ public class MenuScreen extends JPanel {
         return box;
     }
     
-    private JSlider createCustomSlider(String label, int x, int y, int value, java.util.function.IntConsumer onValueChanged) {
-        JSlider slider = new JSlider(JSlider.HORIZONTAL, 1, 10, value); // goes from 1 to 10, default is 5
+    private JSlider createCustomSlider(int start, String label, int x, int y, int value, java.util.function.IntConsumer onValueChanged) {
+        JSlider slider = new JSlider(JSlider.HORIZONTAL, start, 10, value); // goes from 1 to 10, default is 5
 
         int centerX = (GameConstants.SCREEN_WIDTH - 800) / 2;
         slider.setBounds(x, y, 800, 100);

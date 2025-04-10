@@ -77,6 +77,25 @@ public class GamePanel extends JPanel implements ActionListener{
 
     private ArrayList<PlacedKana> placedKanas = new ArrayList<>();
 
+    // images of snake
+    ImageIcon bodyBottomLeftIcon = new ImageIcon(getClass().getResource("/res/snake/body_bottomleft.png"));
+    ImageIcon bodyBottomRightIcon = new ImageIcon(getClass().getResource("/res/snake/body_bottomright.png"));
+    ImageIcon bodyHorizontalIcon = new ImageIcon(getClass().getResource("/res/snake/body_horizontal.png"));
+    ImageIcon bodyTopLeftIcon = new ImageIcon(getClass().getResource("/res/snake/body_topleft.png"));
+    ImageIcon bodyTopRightIcon = new ImageIcon(getClass().getResource("/res/snake/body_topright.png"));
+    ImageIcon bodyVerticalIcon = new ImageIcon(getClass().getResource("/res/snake/body_vertical.png"));
+
+    ImageIcon headLeftIcon = new ImageIcon(getClass().getResource("/res/snake/head_left.png"));
+    ImageIcon headRightIcon = new ImageIcon(getClass().getResource("/res/snake/head_right.png"));
+    ImageIcon headUpIcon = new ImageIcon(getClass().getResource("/res/snake/head_up.png"));
+    ImageIcon headDownIcon = new ImageIcon(getClass().getResource("/res/snake/head_down.png"));
+ 
+    ImageIcon tailLeftIcon = new ImageIcon(getClass().getResource("/res/snake/tail_left.png"));
+    ImageIcon tailRightIcon = new ImageIcon(getClass().getResource("/res/snake/tail_right.png"));
+    ImageIcon tailUpIcon = new ImageIcon(getClass().getResource("/res/snake/tail_up.png"));
+    ImageIcon tailDownIcon = new ImageIcon(getClass().getResource("/res/snake/tail_down.png"));
+
+
     public GamePanel(JFrame frame, String kanaMode) {
         this.frame = frame;
         random = new Random();
@@ -226,18 +245,8 @@ public class GamePanel extends JPanel implements ActionListener{
                 g.drawImage(pk.kana.image, pk.x - 10, pk.y - 15, GameConstants.UNIT_SIZE * 2, GameConstants.UNIT_SIZE * 2, this);
             }
             
-            // iterate through all body parts of snake
-            for (int i = 0; i < bodyParts; i++) {
-                if (i == 0) { // head of snake
-                    g.setColor(GameSettings.getSnakeColor());
-                    g.fillRect(x[i], y[i], GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE);
-                    //g.drawImage(liamSnakeImage, x[i], y[i], UNIT_SIZE, UNIT_SIZE, this);
-                } else { // body of snake
-                    g.setColor(GameSettings.getSnakeColor());
-                    //g.setColor(new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255))); // random snake color
-                    g.fillRect(x[i], y[i], GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE);
-                }
-            }
+            drawSnake(g);
+
             g.setColor(Color.CYAN);
             g.setFont(new Font("Ink Free",Font.BOLD, 25));
             FontMetrics metricsHighScore = getFontMetrics(g.getFont());
@@ -251,6 +260,83 @@ public class GamePanel extends JPanel implements ActionListener{
         } else {
             gameOver(g); 
         }   
+    }
+
+    public void drawSnake(Graphics g) {
+        for (int i = 0; i < bodyParts; i++) {
+            int xPos = x[i];
+            int yPos = y[i];
+
+            if (i == 0) { //HEAD
+                switch (direction) {
+                    case 'U':
+                        g.drawImage(headUpIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                        break;
+                    case 'D':
+                        g.drawImage(headDownIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                        break;
+                    case 'R':
+                        g.drawImage(headRightIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                        break;
+                    case 'L':
+                        g.drawImage(headLeftIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                        break;
+                    default:
+                        break;
+                }
+            } else if (i == bodyParts - 1) { // TAIL
+                int xPosBefore = x[i - 1];
+                int yPosBefore = y[i - 1];
+
+                if (xPos == xPosBefore && yPos < yPosBefore) { // UP
+                    g.drawImage(tailUpIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                }
+                else if (xPos == xPosBefore && yPos > yPosBefore) { // DOWN
+                    g.drawImage(tailDownIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                }
+                else if (xPos > xPosBefore && yPos == yPosBefore) { // RIGHT
+                    g.drawImage(tailRightIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                }
+                else { // LEFT
+                    g.drawImage(tailLeftIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                }
+            } else { // REST OF BODY
+                String directionFromBefore = getDirection(x[i-1], y[i-1], x[i], y[i]);
+                String directionToAfter = getDirection(x[i], y[i], x[i+1], y[i+1]);
+
+                if ((directionFromBefore.equals("UP") && directionToAfter.equals("RIGHT")) ||
+                    (directionFromBefore.equals("LEFT") && directionToAfter.equals("DOWN"))) { // UP and RIGHT turn or LEFT and DOWN turn
+                    g.drawImage(bodyTopRightIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                }
+                else if ((directionFromBefore.equals("UP") && directionToAfter.equals("LEFT")) ||
+                    (directionFromBefore.equals("RIGHT") && directionToAfter.equals("DOWN"))) { // UP and LEFT turn or RIGHT and DOWN turn
+                    g.drawImage(bodyTopLeftIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                }
+                else if ((directionFromBefore.equals("DOWN") && directionToAfter.equals("RIGHT")) ||
+                (directionFromBefore.equals("LEFT") && directionToAfter.equals("UP"))) { // DOWN and RIGHT turn or LEFT and UP turn
+                    g.drawImage(bodyBottomRightIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                }
+                else if ((directionFromBefore.equals("DOWN") && directionToAfter.equals("LEFT")) ||
+                (directionFromBefore.equals("RIGHT") && directionToAfter.equals("UP"))){ // DOWN and LEFT turn or RIGHT and UP turn
+                    g.drawImage(bodyBottomLeftIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this); 
+                }
+                else if (directionFromBefore.equals(directionToAfter)) {
+                    if (directionFromBefore.equals("UP") || directionFromBefore.equals("DOWN")) {
+                        g.drawImage(bodyVerticalIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                    } else {
+                        g.drawImage(bodyHorizontalIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
+                    }
+                }
+            }
+        }
+    }
+
+    String getDirection(int beforeX, int beforeY, int afterX, int afterY) {
+        if (beforeX == afterX && beforeY > afterY) return "UP";
+        if (beforeX == afterX && beforeY < afterY) return "DOWN";
+        if (beforeX > afterX && beforeY == afterY) return "RIGHT";
+        if (beforeX < afterX && beforeY == afterY) return "LEFT";
+        return "NONE";
     }
 
     public void newKanas() {
@@ -286,7 +372,7 @@ public class GamePanel extends JPanel implements ActionListener{
                 getCoords();
                 tempX = kanaX;
                 tempY = kanaY;
-                wrongKana = kanaManager.randomKana();
+                wrongKana = kanaManager.randomKanaExcludingRomaji(correctKana.romaji);
             } while (isOccupiedOrUsed(tempX, tempY, wrongKana));
 
             PlacedKana wrongPK = new PlacedKana(kanaX, kanaY, wrongKana, false);

@@ -29,6 +29,14 @@ public class KanaManager {
         }
     }
 
+    public Kana randomKanaExcludingRomaji(String excludedRomaji) {
+        Kana kana;
+        do {
+            kana = randomKana();
+        } while (kana.romaji.equals(excludedRomaji));
+        return kana;
+    }    
+
     public int totalPossibleKana() {
         if (chooseHiragana && chooseKatakana) return Kana.hiragana.size() + Kana.katakana.size();
         else if (chooseHiragana) return Kana.hiragana.size();

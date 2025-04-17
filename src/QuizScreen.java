@@ -1,3 +1,4 @@
+//import java.util.Timer;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -16,6 +17,16 @@ public class QuizScreen extends JPanel{
     private int submitButtonWidth;
     private int submitButtonHeight;
 
+    private int hint1ButtonX;
+    private int hint1ButtonY;
+    private int hint1ButtonWidth;
+    private int hint1ButtonHeight;
+
+    private int hint2ButtonX;
+    private int hint2ButtonY;
+    private int hint2ButtonWidth;
+    private int hint2ButtonHeight;
+
     private int skipButtonX;
     private int skipButtonY;
     private int skipButtonWidth;
@@ -26,8 +37,12 @@ public class QuizScreen extends JPanel{
 
     private int totalQuiz = 0;
     private int correctQuiz = 0;
+    private int skipsQuiz = 0;
+    private int hintsQuiz = 0;
     private boolean newQuizChoiceCondition = false;
     private boolean victoryQuizStatus = false;
+    private boolean hintShown = false;
+    private String hintText = "";
 
     private KanaManager kanaManager;
     private Kana randomKana;
@@ -133,9 +148,50 @@ public class QuizScreen extends JPanel{
         }
     }
 
+    public void showFirstLetterHint() {
+        disableInputForHint();
+        hintText = randomKana.romaji.substring(0, 1);
+    }
+
+    public void showFullKanaHint() {
+        disableInputForHint();
+        hintText = randomKana.romaji;
+    }
+
+    public void disableInputForHint() {
+        inputField.setEnabled(false);
+        totalQuiz++;
+        hintsQuiz++;
+        hintShown = true;
+        repaint();
+
+        new Timer(1000, e -> {
+            hintShown = false;
+            hintText = "";
+            inputField.setText("");
+            inputField.setEnabled(true);
+
+            if (gottenCorrect.size() == kanaManager.totalPossibleKana()) {
+                inputField.setVisible(false);
+                victoryQuizStatus = true;
+                kanaImage = null;
+            } else {
+                if (kanaManager.getMode().equals("Hiragana")) {
+                    hiraganaQuiz();
+                } else {
+                    katakanaQuiz();
+                }
+            }
+        }) {{
+            setRepeats(false);
+            start();
+        }};
+    }
+
     public void skipAnswer() {
         gottenCorrect.add(randomKana);
         totalQuiz++;
+        skipsQuiz++;
         inputField.setText("");
 
         if (gottenCorrect.size() == kanaManager.totalPossibleKana()) {
@@ -168,6 +224,18 @@ public class QuizScreen extends JPanel{
             y >= submitButtonY && y <= (submitButtonY + submitButtonHeight)) {
             submitAnswer();
         }
+        // hint1 button
+        if (!victoryQuizStatus &&
+            x >= hint1ButtonX && x <= (hint1ButtonX + hint1ButtonWidth) && 
+            y >= hint1ButtonY && y <= (hint1ButtonY + hint1ButtonHeight)) {
+            showFirstLetterHint();
+        }
+        // hint2 button
+        if (!victoryQuizStatus &&
+            x >= hint2ButtonX && x <= (hint2ButtonX + hint2ButtonWidth) && 
+            y >= hint2ButtonY && y <= (hint2ButtonY + hint2ButtonHeight)) {
+            showFullKanaHint();
+        }
         // skip button
         if (!victoryQuizStatus &&
             x >= skipButtonX && x <= (skipButtonX + skipButtonWidth) && 
@@ -195,10 +263,16 @@ public class QuizScreen extends JPanel{
             drawKana(g);
             drawSubmitButton(g);
             drawSkipButton(g);
+            drawHintButton1(g);
+            drawHintButton2(g);
         }
 
         if (newQuizChoiceCondition) { //show correct or wrong based on user's answer
             drawResultText(g);
+        }
+
+        if (hintShown) {
+            drawHintText(g);
         }
 
         if (victoryQuizStatus) {
@@ -225,6 +299,15 @@ public class QuizScreen extends JPanel{
             if (choiceString == "Correct!") g.setColor(Color.GREEN);
             else g.setColor(Color.RED);
             g.drawString(choiceString, x, y);
+    }
+
+    private void drawHintText(Graphics g) {
+        g.setFont(new Font("Ink Free", Font.BOLD, 50));
+        g.setColor(Color.WHITE);
+        FontMetrics metrics = g.getFontMetrics();
+        int x = (getWidth() - metrics.stringWidth(hintText)) / 2;
+        int y = 150;
+        g.drawString(hintText, x, y);
     }
 
     public void showQuizChoiceResult(boolean choice) {
@@ -284,6 +367,11 @@ public class QuizScreen extends JPanel{
         FontMetrics metricsAccuracy2 = getFontMetrics(g.getFont());
         g.drawString("Correct: " + correctQuiz + ", Total: " + totalQuiz, (getWidth() - metricsAccuracy2.stringWidth("Correct: " + correctQuiz + "   Total: " + totalQuiz)) / 2, 675);
 
+        g.setColor(new Color(0, 153, 153));
+        g.setFont(new Font("Ink Free", Font.BOLD, 30));
+        FontMetrics metricsSkipsHints = getFontMetrics(g.getFont());
+        g.drawString("Skips: " + skipsQuiz + ", Hints: " + hintsQuiz, (getWidth() - metricsSkipsHints.stringWidth("Skips: " + skipsQuiz + "   Hints: " + hintsQuiz)) / 2, 800);
+
         // back button
         drawBackButton(g);
     }
@@ -322,5 +410,29 @@ public class QuizScreen extends JPanel{
         skipButtonX = (GameConstants.SCREEN_WIDTH - skipButtonWidth) / 2;
         g.drawString("Skip", skipButtonX, skipButtonY); 
         skipButtonY = skipButtonY - metricsSkip.getAscent(); 
+    }
+
+    public void drawHintButton1(Graphics g) {
+        g.setColor(Color.BLACK);
+        g.setFont(new Font("Ink Free", Font.BOLD, 23));
+        FontMetrics metricsHint1 = g.getFontMetrics();
+        hint1ButtonY = 525; 
+        hint1ButtonWidth = metricsHint1.stringWidth("(Hint: Show First Letter)"); // width of hint1 text
+        hint1ButtonHeight = metricsHint1.getHeight(); // height of hint1 text
+        hint1ButtonX = (GameConstants.SCREEN_WIDTH - hint1ButtonWidth) - 10;
+        g.drawString("Hint: Show First Letter", hint1ButtonX, hint1ButtonY); 
+        hint1ButtonY = hint1ButtonY - metricsHint1.getAscent(); 
+    }
+
+    public void drawHintButton2(Graphics g) {
+        g.setColor(Color.BLACK);
+        g.setFont(new Font("Ink Free", Font.BOLD, 23));
+        FontMetrics metricsHint2 = g.getFontMetrics();
+        hint2ButtonY = 625; 
+        hint2ButtonWidth = metricsHint2.stringWidth("(Hint: Show Full Kana)"); // width of hint2 text
+        hint2ButtonHeight = metricsHint2.getHeight(); // height of hint2 text
+        hint2ButtonX = (GameConstants.SCREEN_WIDTH - hint2ButtonWidth) - 25;
+        g.drawString("Hint: Show Full Kana", hint2ButtonX, hint2ButtonY); 
+        hint2ButtonY = hint2ButtonY - metricsHint2.getAscent(); 
     }
 }

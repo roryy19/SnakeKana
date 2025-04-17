@@ -6,28 +6,10 @@ public class MenuScreen extends JPanel {
     
     private JFrame frame;
 
-    private int chooseX;
-    private int chooseY;
-
     private int homeButtonX;
     private int homeButtonY;
     private int homeButtonWidth;
     private int homeButtonHeight;
-    
-    private int greenButtonX;
-    private int greenButtonY;
-    private int greenButtonWidth;
-    private int greenButtonHeight;
-
-    private int redButtonX;
-    private int redButtonY;
-    private int redButtonWidth;
-    private int redButtonHeight;
-
-    private int blueButtonX;
-    private int blueButtonY;
-    private int blueButtonWidth;
-    private int blueButtonHeight;
 
     private JCheckBox noDeathCheckBox;
     private JCheckBox infiniteCheckBox;
@@ -148,22 +130,7 @@ public class MenuScreen extends JPanel {
         if (x >= homeButtonX && x <= (homeButtonX + homeButtonWidth) && 
             y >= homeButtonY && y <= (homeButtonY + homeButtonHeight)) {
             startHome();
-        }/*
-        // snake green
-        if (x >= greenButtonX && x <= (greenButtonX + greenButtonWidth) && 
-            y >= greenButtonY && y <= (greenButtonY + greenButtonHeight)) {
-            changeColor(new Color(23, 102, 31));
         }
-        // snake red
-        if (x >= redButtonX && x <= (redButtonX + redButtonWidth) && 
-            y >= redButtonY && y <= (redButtonY + redButtonHeight)) {
-            changeColor(Color.RED);
-        }
-        // snake blue
-        if (x >= blueButtonX && x <= (blueButtonX + blueButtonWidth) && 
-            y >= blueButtonY && y <= (blueButtonY + blueButtonHeight)) {
-            changeColor(Color.BLUE);
-        }*/
     }
 
     private void startHome() {
@@ -173,10 +140,6 @@ public class MenuScreen extends JPanel {
         frame.pack();
         homeScreen.requestFocusInWindow();
         frame.validate();
-    }
-
-    private void changeColor(Color color) {
-        GameSettings.setSnakeColor(color);
     }
 
     @Override

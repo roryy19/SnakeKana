@@ -1,7 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.lang.reflect.Method;
 
 public class ChartScreen extends JPanel{
     private JFrame frame;

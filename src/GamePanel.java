@@ -67,7 +67,6 @@ public class GamePanel extends JPanel implements ActionListener{
     boolean newFuriganaCondition = false;
     private Timer furiganaTimer;
     String furiganaString = "";
-    //int wrongAmount = 3;
     private Timer choiceTimer;
     boolean newChoiceCondition = false;
     String choiceString = "";
@@ -111,10 +110,6 @@ public class GamePanel extends JPanel implements ActionListener{
         });
         ImageIcon backgroundIcon = new ImageIcon(getClass().getResource("/res/images/background1.jpg"));
         backgroundImage1 = backgroundIcon.getImage();
-
-        // choose kana that will be used
-        //this.chooseHiragana = kanaMode.equals("Hiragana") || kanaMode.equals("Both");
-        //this.chooseKatakana = kanaMode.equals("Katakana") || kanaMode.equals("Both");
 
         kanaManager = new KanaManager(kanaMode);
 
@@ -194,14 +189,6 @@ public class GamePanel extends JPanel implements ActionListener{
             else g.setColor(Color.RED);
             g.drawString(choiceString, x, y);
         }
-        /*if (newLevelCondition) { // new level text
-            g.setColor(Color.YELLOW);
-            g.setFont(new Font("Ink Free", Font.BOLD, 40));
-            FontMetrics metricsNewLevel = g.getFontMetrics();
-            int x = (getWidth() - metricsNewLevel.stringWidth(newLevelString)) / 2;
-            int y = (getHeight() / 2 - metricsNewLevel.getAscent());
-            g.drawString(newLevelString, x, y);
-        }*/
     }
 
     public void drawHeaderBar(Graphics g) {

@@ -195,12 +195,12 @@ public class MenuScreen extends JPanel {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsHome = g.getFontMetrics();
-        homeButtonX = 10; // center on x axis
-        homeButtonY = 70; // center on y axis
-        homeButtonWidth = metricsHome.stringWidth("Home"); // width of Play text
-        homeButtonHeight = metricsHome.getHeight(); // height of play text
+        homeButtonX = 10; 
+        homeButtonY = 70; 
+        homeButtonWidth = metricsHome.stringWidth("Home"); 
+        homeButtonHeight = metricsHome.getHeight(); 
         g.drawString("Home", homeButtonX, homeButtonY); 
-        homeButtonY = homeButtonY - metricsHome.getAscent(); // make Y coord top of text not middle for clicking
+        homeButtonY = homeButtonY - metricsHome.getAscent(); 
     } 
 
     private void drawSnakeColorButtons(Graphics g) {

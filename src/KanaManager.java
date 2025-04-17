@@ -4,6 +4,7 @@ public class KanaManager {
     private boolean chooseHiragana;
     private boolean chooseKatakana;
     private Random random;
+    private String mode;
 
     public KanaManager(String mode) {
         this.random = new Random();
@@ -11,8 +12,13 @@ public class KanaManager {
     }
 
     public void setKanaMode(String mode) {
+        this.mode = mode;
         this.chooseHiragana = mode.equals("Hiragana") || mode.equals("Both");
         this.chooseKatakana = mode.equals("Katakana") || mode.equals("Both");
+    }
+
+    public String getMode() {
+        return this.mode;
     }
 
     public Kana randomKana() {

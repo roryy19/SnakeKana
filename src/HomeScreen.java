@@ -5,7 +5,6 @@ import java.awt.event.*;
 public class HomeScreen extends JPanel {
     
     private JFrame frame;
-    private SoundManager soundManager;
 
     private int playButtonX;
     private int playButtonY;
@@ -30,9 +29,8 @@ public class HomeScreen extends JPanel {
 
     private Image backgroundImage1;
 
-    public HomeScreen(JFrame frame, SoundManager soundManager) {
+    public HomeScreen(JFrame frame) {
         this.frame = frame;
-        this.soundManager = soundManager;
 
         setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
 
@@ -77,9 +75,9 @@ public class HomeScreen extends JPanel {
         add(katakanaButton);
         add(bothButton);
 
-        hiraganaButton.addActionListener(e -> soundManager.playButtonClick("/res/sound/button_click_sound.wav"));
-        katakanaButton.addActionListener(e -> soundManager.playButtonClick("/res/sound/button_click_sound.wav"));
-        bothButton.addActionListener(e -> soundManager.playButtonClick("/res/sound/button_click_sound.wav"));
+        hiraganaButton.addActionListener(e -> SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav"));
+        katakanaButton.addActionListener(e -> SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav"));
+        bothButton.addActionListener(e -> SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav"));
 
 
         switch (selectedKanaMode) {
@@ -101,19 +99,19 @@ public class HomeScreen extends JPanel {
         if (x >= playButtonX && x <= (playButtonX + playButtonWidth) && 
             y >= playButtonY && y <= (playButtonY + playButtonHeight)) {
             startGame();
-            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+            SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
         }
         // menu button
         if (x >= menuButtonX && x <= (menuButtonX + menuButtonWidth) &&
             y >= menuButtonY && y <= (menuButtonY + menuButtonHeight)) {
             startMenu();
-            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+            SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
         }
         // chart/quiz button
         if (x >= chartButtonX && x <= (chartButtonX + chartButtonWidth) &&
             y >= chartButtonY && y <= (chartButtonY + chartButtonHeight)) {
             startChart();
-            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+            SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
         }
     }
 
@@ -122,7 +120,7 @@ public class HomeScreen extends JPanel {
 
         setMode();
 
-        GamePanel gamePanel = new GamePanel(frame, selectedKanaMode, soundManager);
+        GamePanel gamePanel = new GamePanel(frame, selectedKanaMode);
         frame.add(gamePanel);
         frame.pack();
         gamePanel.requestFocusInWindow();
@@ -133,8 +131,7 @@ public class HomeScreen extends JPanel {
         frame.remove(this); // remove home screen to go to menu
 
         setMode();
-        SoundManager soundManager = new SoundManager();
-        MenuScreen menuScreen = new MenuScreen(frame, soundManager);
+        MenuScreen menuScreen = new MenuScreen(frame);
         frame.add(menuScreen);
         frame.pack();
         menuScreen.requestFocusInWindow();
@@ -146,7 +143,7 @@ public class HomeScreen extends JPanel {
 
         setMode();
 
-        ChartScreen chartchartScreen = new ChartScreen(frame, soundManager);
+        ChartScreen chartchartScreen = new ChartScreen(frame);
         frame.add(chartchartScreen);
         frame.pack();
         chartchartScreen.requestFocusInWindow();

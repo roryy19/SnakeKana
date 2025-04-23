@@ -4,14 +4,19 @@ import java.net.URL;
 
 public class SoundManager {
 
-    private float sfxVolume = 0.5f;
-    private float musicVolume = 0.5f;
-    private Clip musicClip;
-    private FloatControl musicVolumeControl;
+    private static SoundManager instance;
+    private float sfxVolume = 0.3f;
 
     public SoundManager() {
         // Warm up the audio system by playing a silent clip
         playSilentClip();
+    }
+
+    public static SoundManager getInstance() {
+        if (instance == null) {
+            instance = new SoundManager();
+        }
+        return instance;
     }
 
     private void playSilentClip() {
@@ -61,35 +66,7 @@ public class SoundManager {
         this.sfxVolume = volume;
     }
 
-    public void setMusicVolume(float volume) {
-        this.musicVolume = volume;
-        if (musicVolumeControl != null) {
-            float dB = (float) (Math.log10(musicVolume == 0 ? 0.0001f : musicVolume) * 20);
-            musicVolumeControl.setValue(dB);
-        }
-    }
-
-    public void playBackgroundMusic(String path) {
-        try {
-            if (musicClip != null) {
-                musicClip.stop();
-                musicClip.close();
-            }
-
-            URL resource = getClass().getResource(path);
-            if (resource == null) {
-                System.err.println("Music file not found: " + path);
-                return;
-            }
-
-            AudioInputStream ais = AudioSystem.getAudioInputStream(resource);
-            musicClip = AudioSystem.getClip();
-            musicClip.open(ais);
-            musicVolumeControl = (FloatControl) musicClip.getControl(FloatControl.Type.MASTER_GAIN);
-            setMusicVolume(musicVolume);
-            musicClip.loop(Clip.LOOP_CONTINUOUSLY);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public float getSFXVolume() {
+        return sfxVolume;
     }
 }

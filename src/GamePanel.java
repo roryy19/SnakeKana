@@ -8,7 +8,6 @@ import java.util.Random;
 public class GamePanel extends JPanel implements ActionListener{
 
     private JFrame frame;
-    private SoundManager soundManager;
     static final int topBarHeight = 100;
     int playAreaHeight;
     int GAME_UNITS; // amount of units that can fit on screen
@@ -96,9 +95,8 @@ public class GamePanel extends JPanel implements ActionListener{
     ImageIcon tailDownIcon = new ImageIcon(getClass().getResource("/res/snake/tail_down.png"));
 
 
-    public GamePanel(JFrame frame, String kanaMode, SoundManager soundManager) {
+    public GamePanel(JFrame frame, String kanaMode) {
         this.frame = frame;
-        this.soundManager = soundManager;
         random = new Random();
         this.setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
         this.setBackground(Color.DARK_GRAY);
@@ -115,7 +113,7 @@ public class GamePanel extends JPanel implements ActionListener{
 
         kanaManager = new KanaManager(kanaMode);
 
-        pauseOverlay = new PauseOverlay(this, soundManager);
+        pauseOverlay = new PauseOverlay(this);
         pauseOverlay.setBounds(0, 0, GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT);
         pauseOverlay.setVisible(false);
         this.setLayout(null);
@@ -469,12 +467,12 @@ public class GamePanel extends JPanel implements ActionListener{
                     score++;
                     total++;
                     bodyParts++;
-                    soundManager.playButtonClick("/res/sound/correct_sound.wav");
+                    SoundManager.getInstance().playButtonClick("/res/sound/correct_sound.wav");
                 // chose incorrect kana
                 } else {
                     showChoiceResult(false);
                     total++;
-                    soundManager.playButtonClick("/res/sound/wrong_sound.wav");
+                    SoundManager.getInstance().playButtonClick("/res/sound/wrong_sound.wav");
                 }
                 newKanas();
                 return;
@@ -583,7 +581,7 @@ public class GamePanel extends JPanel implements ActionListener{
         }
         if (!running) {
             timer.stop();
-            soundManager.playButtonClick("/res/sound/game_over_sound.wav");
+            SoundManager.getInstance().playButtonClick("/res/sound/game_over_sound.wav");
         }
     }
 
@@ -594,13 +592,13 @@ public class GamePanel extends JPanel implements ActionListener{
             if (x >= retryButtonX && x <= (retryButtonX + retryButtonWidth) // within x coords
                 && y >= retryButtonY && y <= (retryButtonY + retryButtonHeight)) { // within y coords
                 resetGame();
-                soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+                SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
             }
             // home button
             if (x >= homeButtonX && x <= (homeButtonX + homeButtonWidth) && 
             y >= homeButtonY && y <= (homeButtonY + homeButtonHeight)) {
                 startHome();
-                soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+                SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
             }
         }
     }
@@ -624,7 +622,7 @@ public class GamePanel extends JPanel implements ActionListener{
 
     public void startHome() {
         frame.remove(this); // remove game screen
-        HomeScreen homeScreen = new HomeScreen(frame, soundManager);
+        HomeScreen homeScreen = new HomeScreen(frame);
         frame.add(homeScreen);
         frame.pack();
         homeScreen.requestFocusInWindow();

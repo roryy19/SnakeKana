@@ -6,7 +6,6 @@ import java.util.ArrayList;
 
 public class QuizScreen extends JPanel{
     private JFrame frame;
-    private SoundManager soundManager;
 
     private int backButtonX;
     private int backButtonY;
@@ -53,9 +52,8 @@ public class QuizScreen extends JPanel{
 
     private ArrayList<Kana> gottenCorrect = new ArrayList<>();
     
-    public QuizScreen(JFrame frame, String quizChoice, SoundManager soundManager) {
+    public QuizScreen(JFrame frame, String quizChoice) {
         this.frame = frame;
-        this.soundManager = soundManager;
         setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
 
         setLayout(null);
@@ -122,9 +120,9 @@ public class QuizScreen extends JPanel{
         if (isCorrect) {
             gottenCorrect.add(randomKana);
             correctQuiz++;
-            soundManager.playButtonClick("/res/sound/correct_sound.wav");
+            SoundManager.getInstance().playButtonClick("/res/sound/correct_sound.wav");
         } else {
-            soundManager.playButtonClick("/res/sound/wrong_sound.wav");
+            SoundManager.getInstance().playButtonClick("/res/sound/wrong_sound.wav");
         }
         
         totalQuiz++;
@@ -222,7 +220,7 @@ public class QuizScreen extends JPanel{
         if (x >= backButtonX && x <= (backButtonX + backButtonWidth) && 
             y >= backButtonY && y <= (backButtonY + backButtonHeight)) {
             startBack();
-            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+            SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
         }
         // submit button
         if (!victoryQuizStatus &&
@@ -235,27 +233,27 @@ public class QuizScreen extends JPanel{
             x >= hint1ButtonX && x <= (hint1ButtonX + hint1ButtonWidth) && 
             y >= hint1ButtonY && y <= (hint1ButtonY + hint1ButtonHeight)) {
             showFirstLetterHint();
-            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+            SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
         }
         // hint2 button
         if (!victoryQuizStatus &&
             x >= hint2ButtonX && x <= (hint2ButtonX + hint2ButtonWidth) && 
             y >= hint2ButtonY && y <= (hint2ButtonY + hint2ButtonHeight)) {
             showFullKanaHint();
-            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+            SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
         }
         // skip button
         if (!victoryQuizStatus &&
             x >= skipButtonX && x <= (skipButtonX + skipButtonWidth) && 
             y >= skipButtonY && y <= (skipButtonY + skipButtonHeight)) {
             skipAnswer();
-            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+            SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
         }
     }
 
     private void startBack() {
         frame.remove(this); // remove quiz screen
-        ChartScreen chartScreen = new ChartScreen(frame, soundManager);
+        ChartScreen chartScreen = new ChartScreen(frame);
         frame.add(chartScreen);
         frame.pack();
         chartScreen.requestFocusInWindow();

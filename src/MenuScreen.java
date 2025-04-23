@@ -16,18 +16,16 @@ public class MenuScreen extends JPanel {
 
     private JSlider speedSlider;
     private JSlider kanaSlider;
+    private JSlider sfxSlider;
+    private JSlider musicSlider;
 
     boolean selectedND;
     boolean selectedInf;
 
-    private Image backgroundImage;
+    private Image backgroundImage;    
 
-    private SoundManager soundManager;
-    
-
-    public MenuScreen(JFrame frame, SoundManager soundManager) {
+    public MenuScreen(JFrame frame) {
         this.frame = frame;
-        this.soundManager = soundManager;
         setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
 
         setLayout(null);
@@ -60,18 +58,33 @@ public class MenuScreen extends JPanel {
 
         // Snake speed slider
         speedSlider = createCustomSlider(
-            1, "Snake Speed", 50, 800, 
+            1, "Snake Speed", 50, 400, 
             GameSettings.getSnakeSpeedSliderValue(),
             GameSettings::setSnakeSpeedSliderValue
         );
         add(speedSlider);
 
         kanaSlider = createCustomSlider(
-            0, "Amount of \"Wrong\" Kana", 50, 650, 
+            0, "Amount of \"Wrong\" Kana", 50, 250, 
             GameSettings.getWrongKanaAmount(),
             GameSettings::setWrongKanaAmount
         );
         add(kanaSlider);
+
+        // SFX and music volume slider
+        sfxSlider = createCustomSlider(
+            0, "Sound Effects Volume", 50, 650, 
+            (int)(SoundManager.getInstance().getSFXVolume() * 10),
+            (val) -> SoundManager.getInstance().setSFXVolume(val / 10f)
+        );
+        add(sfxSlider);
+
+        musicSlider = createCustomSlider(
+            0, "Music Volume", 50, 800, 
+            (int)(MusicManager.getInstance().getVolume() * 10),
+            (val) -> MusicManager.getInstance().setVolume(val / 10f)
+        );
+        add(musicSlider);
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -97,7 +110,7 @@ public class MenuScreen extends JPanel {
             box.setIcon(isSelected ? checkedIcon : uncheckedIcon);
             box.setForeground(isSelected ? Color.WHITE : Color.RED);
             onToggle.run(); // apply the setting change
-            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+            SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
         });
     
         return box;
@@ -130,7 +143,7 @@ public class MenuScreen extends JPanel {
         slider.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+                SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
             }
         });
 
@@ -141,14 +154,14 @@ public class MenuScreen extends JPanel {
         // home button
         if (x >= homeButtonX && x <= (homeButtonX + homeButtonWidth) && 
             y >= homeButtonY && y <= (homeButtonY + homeButtonHeight)) {
-            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+            SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
             startHome();
         }
     }
 
     private void startHome() {
         frame.remove(this); // remove menu screen
-        HomeScreen homeScreen = new HomeScreen(frame, soundManager);
+        HomeScreen homeScreen = new HomeScreen(frame);
         frame.add(homeScreen);
         frame.pack();
         homeScreen.requestFocusInWindow();

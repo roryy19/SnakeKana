@@ -6,6 +6,8 @@ public class PauseOverlay extends JPanel{
 
     private final GamePanel gamePanel;
 
+    private SoundManager soundManager;
+
     private int continueButtonX;
     private int continueButtonY;
     private int continueButtonWidth;
@@ -16,8 +18,9 @@ public class PauseOverlay extends JPanel{
     private int homeButtonWidth;
     private int homeButtonHeight;
     
-    public PauseOverlay(GamePanel gamePanel) {
+    public PauseOverlay(GamePanel gamePanel, SoundManager soundManager) {
         this.gamePanel = gamePanel;
+        this.soundManager = soundManager;
         setOpaque(false);
         setFocusable(false);
         setVisible(false);
@@ -71,10 +74,12 @@ public class PauseOverlay extends JPanel{
         if (withinBounds(x, y, continueButtonX, continueButtonY, continueButtonWidth, continueButtonHeight)) {
             setVisible(false);
             gamePanel.resumeGame(); // resumes timer, etc.
+            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
         }
         // home button
         if (withinBounds(x, y, homeButtonX, homeButtonY, homeButtonWidth, homeButtonHeight)) {
             gamePanel.startHome(); // switch screen
+            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
         }
     }
     private boolean withinBounds(int x, int y, int btnX, int btnY, int width, int height) {

@@ -21,10 +21,13 @@ public class MenuScreen extends JPanel {
     boolean selectedInf;
 
     private Image backgroundImage;
+
+    private SoundManager soundManager;
     
 
-    public MenuScreen(JFrame frame) {
+    public MenuScreen(JFrame frame, SoundManager soundManager) {
         this.frame = frame;
+        this.soundManager = soundManager;
         setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
 
         setLayout(null);
@@ -94,6 +97,7 @@ public class MenuScreen extends JPanel {
             box.setIcon(isSelected ? checkedIcon : uncheckedIcon);
             box.setForeground(isSelected ? Color.WHITE : Color.RED);
             onToggle.run(); // apply the setting change
+            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
         });
     
         return box;
@@ -122,6 +126,14 @@ public class MenuScreen extends JPanel {
             onValueChanged.accept(sliderValue);
         });
 
+        // sound only when released (less repetitive)
+        slider.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                soundManager.playButtonClick("/res/sound/button_click_sound.wav");
+            }
+        });
+
         return slider;
     }
 
@@ -129,13 +141,14 @@ public class MenuScreen extends JPanel {
         // home button
         if (x >= homeButtonX && x <= (homeButtonX + homeButtonWidth) && 
             y >= homeButtonY && y <= (homeButtonY + homeButtonHeight)) {
+            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
             startHome();
         }
     }
 
     private void startHome() {
         frame.remove(this); // remove menu screen
-        HomeScreen homeScreen = new HomeScreen(frame);
+        HomeScreen homeScreen = new HomeScreen(frame, soundManager);
         frame.add(homeScreen);
         frame.pack();
         homeScreen.requestFocusInWindow();
@@ -147,7 +160,6 @@ public class MenuScreen extends JPanel {
         super.paintComponent(g);
         g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this); // background
         drawHomeButton(g); // home button
-        drawSnakeColorButtons(g); // choose snake color buttons
 
         // top divider line
         g.setColor(new Color(255, 255, 255, 180));
@@ -165,49 +177,4 @@ public class MenuScreen extends JPanel {
         g.drawString("Home", homeButtonX, homeButtonY); 
         homeButtonY = homeButtonY - metricsHome.getAscent(); 
     } 
-
-    private void drawSnakeColorButtons(Graphics g) {
-        /*
-        // choose snake text
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Ink Free", Font.BOLD, 50));
-        FontMetrics metricsChoose = g.getFontMetrics();
-        chooseX = (GameConstants.SCREEN_WIDTH - metricsChoose.stringWidth("Choose Snake Color:")) / 2;; 
-        chooseY = 300; 
-        g.drawString("Choose Snake Color:", chooseX, chooseY); 
-
-        // green snake button
-        g.setColor(new Color(23, 102, 31));
-        g.setFont(new Font("Ink Free", Font.BOLD, 75));
-        FontMetrics metricsGreen = g.getFontMetrics();
-        greenButtonX = (GameConstants.SCREEN_WIDTH - metricsGreen.stringWidth("Green")) / 2;; 
-        greenButtonY = 400; 
-        greenButtonWidth = metricsGreen.stringWidth("Green");
-        greenButtonHeight = metricsGreen.getHeight(); 
-        g.drawString("Green", greenButtonX, greenButtonY); 
-        greenButtonY = greenButtonY - metricsGreen.getAscent(); 
-
-        // red snake button
-        g.setColor(Color.RED);
-        g.setFont(new Font("Ink Free", Font.BOLD, 75));
-        FontMetrics metricsRed = g.getFontMetrics();
-        redButtonX = (GameConstants.SCREEN_WIDTH - metricsRed.stringWidth("Red")) / 2;; 
-        redButtonY = 500; 
-        redButtonWidth = metricsRed.stringWidth("Red");
-        redButtonHeight = metricsRed.getHeight(); 
-        g.drawString("Red", redButtonX, redButtonY); 
-        redButtonY = redButtonY - metricsRed.getAscent();
-
-        // blue snake button
-        g.setColor(Color.BLUE);
-        g.setFont(new Font("Ink Free", Font.BOLD, 75));
-        FontMetrics metricsBlue = g.getFontMetrics();
-        blueButtonX = (GameConstants.SCREEN_WIDTH - metricsBlue.stringWidth("Blue")) / 2;; 
-        blueButtonY = 600; 
-        blueButtonWidth = metricsBlue.stringWidth("Blue");
-        blueButtonHeight = metricsBlue.getHeight(); 
-        g.drawString("Blue", blueButtonX, blueButtonY); 
-        blueButtonY = blueButtonY - metricsBlue.getAscent();
-        */
-    }
 }

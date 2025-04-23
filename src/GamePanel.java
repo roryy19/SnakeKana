@@ -8,6 +8,7 @@ import java.util.Random;
 public class GamePanel extends JPanel implements ActionListener{
 
     private JFrame frame;
+    private SoundManager soundManager;
     static final int topBarHeight = 100;
     int playAreaHeight;
     int GAME_UNITS; // amount of units that can fit on screen
@@ -95,8 +96,9 @@ public class GamePanel extends JPanel implements ActionListener{
     ImageIcon tailDownIcon = new ImageIcon(getClass().getResource("/res/snake/tail_down.png"));
 
 
-    public GamePanel(JFrame frame, String kanaMode) {
+    public GamePanel(JFrame frame, String kanaMode, SoundManager soundManager) {
         this.frame = frame;
+        this.soundManager = soundManager;
         random = new Random();
         this.setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
         this.setBackground(Color.DARK_GRAY);
@@ -113,7 +115,7 @@ public class GamePanel extends JPanel implements ActionListener{
 
         kanaManager = new KanaManager(kanaMode);
 
-        pauseOverlay = new PauseOverlay(this);
+        pauseOverlay = new PauseOverlay(this, soundManager);
         pauseOverlay.setBounds(0, 0, GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT);
         pauseOverlay.setVisible(false);
         this.setLayout(null);
@@ -208,13 +210,13 @@ public class GamePanel extends JPanel implements ActionListener{
 
         // Score (left)
         g.setColor(Color.CYAN);
-        g.setFont(new Font("Ink Free", Font.BOLD, 30));
-        g.drawString("Score: " + score, 10, 30);
+        g.setFont(new Font("Ink Free", Font.BOLD, 50));
+        g.drawString("Score: " + score, 10, 50);
 
         // Accuracy (right)
         g.setColor(Color.ORANGE);
-        g.setFont(new Font("Ink Free", Font.BOLD, 30));
-        g.drawString("Accuracy: " + getAccuracy() + "%", screenWidth - 235, 30);
+        g.setFont(new Font("Ink Free", Font.BOLD, 40));
+        g.drawString("Accuracy: " + getAccuracy() + "%", screenWidth - 300, 50);
     }
 
     public int getAccuracy() {
@@ -233,15 +235,6 @@ public class GamePanel extends JPanel implements ActionListener{
             }
             
             drawSnake(g);
-
-            g.setColor(Color.CYAN);
-            g.setFont(new Font("Ink Free",Font.BOLD, 25));
-            FontMetrics metricsHighScore = getFontMetrics(g.getFont());
-            g.drawString("High Score: "+highScore, (getWidth() - metricsHighScore.stringWidth("Score : "+highScore)) / 2 - 185, g.getFont().getSize()); // left
-            g.setColor(Color.RED);
-            g.setFont(new Font("Ink Free", Font.BOLD, 25));
-            FontMetrics metricsLevel = getFontMetrics(g.getFont());
-            g.drawString("Level: " + (currentLevel + 1), (getWidth() - metricsLevel.stringWidth("Level: " + currentLevel + 1)) / 2 + 125, g.getFont().getSize()); //right
         } else if (victoryStatus) {
             startVictory(g);
         } else {
@@ -319,6 +312,19 @@ public class GamePanel extends JPanel implements ActionListener{
     }
 
     String getDirection(int beforeX, int beforeY, int afterX, int afterY) {
+        int unit = GameConstants.UNIT_SIZE;
+        int screenWidth = getWidth();
+        int screenHeight = getHeight();
+        int topLimit = GamePanel.topBarHeight;
+
+        // Corrected Wraparound (horizontal)
+    if (beforeX == screenWidth - unit && afterX == 0) return "LEFT";  // RIGHT -> LEFT
+    if (beforeX == 0 && afterX == screenWidth - unit) return "RIGHT"; // LEFT -> RIGHT
+
+    // Corrected Wraparound (vertical)
+    if (beforeY == screenHeight - unit && afterY == topLimit) return "DOWN";    // DOWN -> TOP
+    if (beforeY == topLimit && afterY == screenHeight - unit) return "UP";  // UP -> BOTTOM
+
         if (beforeX == afterX && beforeY > afterY) return "UP";
         if (beforeX == afterX && beforeY < afterY) return "DOWN";
         if (beforeX > afterX && beforeY == afterY) return "RIGHT";
@@ -463,10 +469,12 @@ public class GamePanel extends JPanel implements ActionListener{
                     score++;
                     total++;
                     bodyParts++;
+                    soundManager.playButtonClick("/res/sound/correct_sound.wav");
                 // chose incorrect kana
                 } else {
                     showChoiceResult(false);
                     total++;
+                    soundManager.playButtonClick("/res/sound/wrong_sound.wav");
                 }
                 newKanas();
                 return;
@@ -575,6 +583,7 @@ public class GamePanel extends JPanel implements ActionListener{
         }
         if (!running) {
             timer.stop();
+            soundManager.playButtonClick("/res/sound/game_over_sound.wav");
         }
     }
 
@@ -585,11 +594,13 @@ public class GamePanel extends JPanel implements ActionListener{
             if (x >= retryButtonX && x <= (retryButtonX + retryButtonWidth) // within x coords
                 && y >= retryButtonY && y <= (retryButtonY + retryButtonHeight)) { // within y coords
                 resetGame();
+                soundManager.playButtonClick("/res/sound/button_click_sound.wav");
             }
             // home button
             if (x >= homeButtonX && x <= (homeButtonX + homeButtonWidth) && 
             y >= homeButtonY && y <= (homeButtonY + homeButtonHeight)) {
-            startHome();
+                startHome();
+                soundManager.playButtonClick("/res/sound/button_click_sound.wav");
             }
         }
     }
@@ -613,7 +624,7 @@ public class GamePanel extends JPanel implements ActionListener{
 
     public void startHome() {
         frame.remove(this); // remove game screen
-        HomeScreen homeScreen = new HomeScreen(frame);
+        HomeScreen homeScreen = new HomeScreen(frame, soundManager);
         frame.add(homeScreen);
         frame.pack();
         homeScreen.requestFocusInWindow();
@@ -680,21 +691,9 @@ public class GamePanel extends JPanel implements ActionListener{
         g.setFont(new Font("Ink Free",Font.BOLD, 75));
         FontMetrics metricsGameOver = getFontMetrics(g.getFont());
         g.drawString("Game Over", (getWidth() - metricsGameOver.stringWidth("Game Over")) / 2, getHeight() / 3 + 50);
-        g.setColor(Color.RED);
-        g.setFont(new Font("Ink Free",Font.BOLD, 25)); 
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free",Font.BOLD, 50)); 
         
-        // current/max score and level
-        FontMetrics metricsScore = getFontMetrics(g.getFont());
-        g.drawString("Score: "+score, (getWidth() - metricsScore.stringWidth("Score : "+score)) / 2, g.getFont().getSize()); // middle
-        g.setColor(Color.CYAN);
-        g.setFont(new Font("Ink Free",Font.BOLD, 25));
-        FontMetrics metricsHighScore = getFontMetrics(g.getFont());
-        g.drawString("High Score: "+highScore, (getWidth() - metricsHighScore.stringWidth("Score : "+highScore)) / 2 - 185, g.getFont().getSize()); // left
-        g.setColor(Color.RED);
-        g.setFont(new Font("Ink Free", Font.BOLD, 25));
-        FontMetrics metricsLevel = getFontMetrics(g.getFont());
-        g.drawString("Level: " + (currentLevel + 1), (getWidth() - metricsLevel.stringWidth("Level: " + currentLevel + 1)) / 2 + 125, g.getFont().getSize()); //right
-
         // play again button
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 85));
@@ -705,10 +704,21 @@ public class GamePanel extends JPanel implements ActionListener{
         retryButtonHeight = metricsPlayAgain.getHeight();   // height of text
         g.drawString("Play Again", retryButtonX, retryButtonY);
         retryButtonY = retryButtonY - metricsPlayAgain.getAscent(); // gets top of highest character, for mouse click
+
+        // stats
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 50));
+        FontMetrics metricsAccuracy = getFontMetrics(g.getFont());
+        g.drawString("Accuracy: " + getAccuracy() + "%", (getWidth() - metricsAccuracy.stringWidth("Accuracy: " + getAccuracy() + "%")) / 2, 725);
+        
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 50));
+        FontMetrics metricsAccuracy2 = getFontMetrics(g.getFont());
+        g.drawString("Correct: " + score + ", Total: " + total, (getWidth() - metricsAccuracy2.stringWidth("Correct: " + score + "   Total: " + total)) / 2, 800);
     
         // home button
         g.setColor(Color.WHITE);
-        g.setFont(new Font("Ink Free", Font.BOLD, 50));
+        g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsHome = g.getFontMetrics();
         homeButtonX = 10; 
         homeButtonY = 100; 

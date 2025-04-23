@@ -4,6 +4,7 @@ import java.awt.event.*;
 
 public class ChartScreen extends JPanel{
     private JFrame frame;
+    private SoundManager soundManager;
 
     private int homeButtonX;
     private int homeButtonY;
@@ -31,8 +32,9 @@ public class ChartScreen extends JPanel{
     private Image katakanaChart;
     
 
-    public ChartScreen(JFrame frame) {
+    public ChartScreen(JFrame frame, SoundManager soundManager) {
         this.frame = frame;
+        this.soundManager = soundManager;
         setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
 
         setLayout(null);
@@ -59,22 +61,25 @@ public class ChartScreen extends JPanel{
         if (x >= homeButtonX && x <= (homeButtonX + homeButtonWidth) && 
             y >= homeButtonY && y <= (homeButtonY + homeButtonHeight)) {
             startHome();
+            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
         }
         // hiragana quiz
         if (x >= hiraButtonX && x <= (hiraButtonX + hiraButtonWidth) && 
             y >= hiraButtonY && y <= (hiraButtonY + hiraButtonHeight)) {
             startQuiz("Hiragana");
+            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
         }
         // katakana quiz
         if (x >= kataButtonX && x <= (kataButtonX + kataButtonWidth) && 
             y >= kataButtonY && y <= (kataButtonY + kataButtonHeight)) {
             startQuiz("Katakana");
+            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
         }
     }
 
     private void startHome() {
         frame.remove(this); // remove chart screen
-        HomeScreen homeScreen = new HomeScreen(frame);
+        HomeScreen homeScreen = new HomeScreen(frame, soundManager);
         frame.add(homeScreen);
         frame.pack();
         homeScreen.requestFocusInWindow();
@@ -83,7 +88,7 @@ public class ChartScreen extends JPanel{
 
     private void startQuiz(String quizChoice) {
         frame.remove(this); // remove menu screen
-        QuizScreen quizScreen = new QuizScreen(frame, quizChoice);
+        QuizScreen quizScreen = new QuizScreen(frame, quizChoice, soundManager);
         frame.add(quizScreen);
         frame.pack();
         quizScreen.requestFocusInWindow();

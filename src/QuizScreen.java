@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 public class QuizScreen extends JPanel{
     private JFrame frame;
+    private SoundManager soundManager;
 
     private int backButtonX;
     private int backButtonY;
@@ -52,8 +53,9 @@ public class QuizScreen extends JPanel{
 
     private ArrayList<Kana> gottenCorrect = new ArrayList<>();
     
-    public QuizScreen(JFrame frame, String quizChoice) {
+    public QuizScreen(JFrame frame, String quizChoice, SoundManager soundManager) {
         this.frame = frame;
+        this.soundManager = soundManager;
         setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
 
         setLayout(null);
@@ -120,6 +122,9 @@ public class QuizScreen extends JPanel{
         if (isCorrect) {
             gottenCorrect.add(randomKana);
             correctQuiz++;
+            soundManager.playButtonClick("/res/sound/correct_sound.wav");
+        } else {
+            soundManager.playButtonClick("/res/sound/wrong_sound.wav");
         }
         
         totalQuiz++;
@@ -217,6 +222,7 @@ public class QuizScreen extends JPanel{
         if (x >= backButtonX && x <= (backButtonX + backButtonWidth) && 
             y >= backButtonY && y <= (backButtonY + backButtonHeight)) {
             startBack();
+            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
         }
         // submit button
         if (!victoryQuizStatus &&
@@ -229,24 +235,27 @@ public class QuizScreen extends JPanel{
             x >= hint1ButtonX && x <= (hint1ButtonX + hint1ButtonWidth) && 
             y >= hint1ButtonY && y <= (hint1ButtonY + hint1ButtonHeight)) {
             showFirstLetterHint();
+            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
         }
         // hint2 button
         if (!victoryQuizStatus &&
             x >= hint2ButtonX && x <= (hint2ButtonX + hint2ButtonWidth) && 
             y >= hint2ButtonY && y <= (hint2ButtonY + hint2ButtonHeight)) {
             showFullKanaHint();
+            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
         }
         // skip button
         if (!victoryQuizStatus &&
             x >= skipButtonX && x <= (skipButtonX + skipButtonWidth) && 
             y >= skipButtonY && y <= (skipButtonY + skipButtonHeight)) {
             skipAnswer();
+            soundManager.playButtonClick("/res/sound/button_click_sound.wav");
         }
     }
 
     private void startBack() {
         frame.remove(this); // remove quiz screen
-        ChartScreen chartScreen = new ChartScreen(frame);
+        ChartScreen chartScreen = new ChartScreen(frame, soundManager);
         frame.add(chartScreen);
         frame.pack();
         chartScreen.requestFocusInWindow();
@@ -265,6 +274,7 @@ public class QuizScreen extends JPanel{
             drawSkipButton(g);
             drawHintButton1(g);
             drawHintButton2(g);
+            drawQuizStatsAndInfo(g);
         }
 
         if (newQuizChoiceCondition) { //show correct or wrong based on user's answer
@@ -280,11 +290,42 @@ public class QuizScreen extends JPanel{
         }
     }
 
+    private void drawQuizStatsAndInfo(Graphics g) {
+        // show correct/total, accuracy, skips, hints
+
+        // correct / total
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 40));
+        FontMetrics metricsCorrectTotal = getFontMetrics(g.getFont());
+        g.drawString(correctQuiz + " / " + totalQuiz, getWidth() - metricsCorrectTotal.stringWidth(correctQuiz + " / " + totalQuiz) - 25, 50);
+
+        // accuracy
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 40));
+        FontMetrics metricsAccuracy = getFontMetrics(g.getFont());
+        g.drawString("Accuracy: " + getQuizAccuracy() + "%", getWidth() - metricsAccuracy.stringWidth("Accuracy: " + getQuizAccuracy() + "%") - 25, 100);
+
+        // Skip info
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 25));
+        g.drawString("Skip: Removes from list, lowers accuracy.", 10, 150);
+
+        // Hint info
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 25));
+        g.drawString("Hint: Does not remove from list, lowers accuracy.", 10, 200);
+
+        // Submit info
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 25));
+        g.drawString("Click Enter or press Submit to answer", 10, 250);
+    }
+
     private void drawResultText(Graphics g) {
         g.setFont(new Font("Ink Free", Font.BOLD, 60));
             FontMetrics metricsChoice = g.getFontMetrics();
             int x = (getWidth() - metricsChoice.stringWidth(choiceString)) / 2;
-            int y = 150;
+            int y = 90;
 
             // draw outline (black)
             g.setColor(Color.BLACK);
@@ -295,18 +336,29 @@ public class QuizScreen extends JPanel{
                     }
                 }
             }
-            // draw main text (yellow)
+            // draw main text
             if (choiceString == "Correct!") g.setColor(Color.GREEN);
             else g.setColor(Color.RED);
             g.drawString(choiceString, x, y);
     }
 
     private void drawHintText(Graphics g) {
-        g.setFont(new Font("Ink Free", Font.BOLD, 50));
+        g.setFont(new Font("Ink Free", Font.BOLD, 100));
         g.setColor(Color.WHITE);
         FontMetrics metrics = g.getFontMetrics();
         int x = (getWidth() - metrics.stringWidth(hintText)) / 2;
-        int y = 150;
+        int y = 90;
+
+        // draw outline (black)
+        g.setColor(Color.BLACK);
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dy = -2; dy <= 2; dy++) {
+                if (dx != 0 || dy != 0) {
+                    g.drawString(hintText, x + dx, y + dy);
+                }
+            }
+        }
+        g.setColor(Color.WHITE);
         g.drawString(hintText, x, y);
     }
 

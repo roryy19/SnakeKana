@@ -1,8 +1,6 @@
 import javax.sound.sampled.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class MusicManager {
     private static MusicManager instance;

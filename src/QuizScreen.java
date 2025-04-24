@@ -272,7 +272,7 @@ public class QuizScreen extends JPanel{
             drawSkipButton(g);
             drawHintButton1(g);
             drawHintButton2(g);
-            drawQuizStatsAndInfo(g);
+            drawQuizStats(g);
         }
 
         if (newQuizChoiceCondition) { //show correct or wrong based on user's answer
@@ -288,7 +288,7 @@ public class QuizScreen extends JPanel{
         }
     }
 
-    private void drawQuizStatsAndInfo(Graphics g) {
+    private void drawQuizStats(Graphics g) {
         // show correct/total, accuracy, skips, hints
 
         // correct / total
@@ -302,21 +302,6 @@ public class QuizScreen extends JPanel{
         g.setFont(new Font("Ink Free", Font.BOLD, 40));
         FontMetrics metricsAccuracy = getFontMetrics(g.getFont());
         g.drawString("Accuracy: " + getQuizAccuracy() + "%", getWidth() - metricsAccuracy.stringWidth("Accuracy: " + getQuizAccuracy() + "%") - 25, 100);
-
-        // Skip info
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Ink Free", Font.BOLD, 25));
-        g.drawString("Skip: Removes from list, lowers accuracy.", 10, 150);
-
-        // Hint info
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Ink Free", Font.BOLD, 25));
-        g.drawString("Hint: Does not remove from list, lowers accuracy.", 10, 200);
-
-        // Submit info
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Ink Free", Font.BOLD, 25));
-        g.drawString("Click Enter or press Submit to answer", 10, 250);
     }
 
     private void drawResultText(Graphics g) {

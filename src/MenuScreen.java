@@ -11,6 +11,21 @@ public class MenuScreen extends JPanel {
     private int homeButtonWidth;
     private int homeButtonHeight;
 
+    private int keybindButtonX;
+    private int keybindButtonY;
+    private int keybindButtonWidth;
+    private int keybindButtonHeight;
+
+    private int creditsButtonX;
+    private int creditsButtonY;
+    private int creditsButtonWidth;
+    private int creditsButtonHeight;
+
+    private int helpButtonX;
+    private int helpButtonY;
+    private int helpButtonWidth;
+    private int helpButtonHeight;
+
     private JCheckBox noDeathCheckBox;
     private JCheckBox infiniteCheckBox;
 
@@ -56,31 +71,31 @@ public class MenuScreen extends JPanel {
         );
         add(infiniteCheckBox);
 
-        // Snake speed slider
-        speedSlider = createCustomSlider(
-            1, "Snake Speed", 50, 400, 
-            GameSettings.getSnakeSpeedSliderValue(),
-            GameSettings::setSnakeSpeedSliderValue
-        );
-        add(speedSlider);
-
         kanaSlider = createCustomSlider(
-            0, "Amount of \"Wrong\" Kana", 50, 250, 
+            0, "Amount of \"Wrong\" Kana", 150, 225, 
             GameSettings.getWrongKanaAmount(),
             GameSettings::setWrongKanaAmount
         );
         add(kanaSlider);
 
+        // Snake speed slider
+        speedSlider = createCustomSlider(
+            1, "Snake Speed", 150, 375, 
+            GameSettings.getSnakeSpeedSliderValue(),
+            GameSettings::setSnakeSpeedSliderValue
+        );
+        add(speedSlider);
+
         // SFX and music volume slider
         sfxSlider = createCustomSlider(
-            0, "Sound Effects Volume", 50, 650, 
+            0, "Sound Effects Volume", 150, 525, 
             (int)(SoundManager.getInstance().getSFXVolume() * 10),
             (val) -> SoundManager.getInstance().setSFXVolume(val / 10f)
         );
         add(sfxSlider);
 
         musicSlider = createCustomSlider(
-            0, "Music Volume", 50, 800, 
+            0, "Music Volume", 150, 675, 
             (int)(MusicManager.getInstance().getVolume() * 10),
             (val) -> MusicManager.getInstance().setVolume(val / 10f)
         );
@@ -119,18 +134,18 @@ public class MenuScreen extends JPanel {
     private JSlider createCustomSlider(int start, String label, int x, int y, int value, java.util.function.IntConsumer onValueChanged) {
         JSlider slider = new JSlider(JSlider.HORIZONTAL, start, 10, value); // goes from 1 to 10, default is 5
 
-        int centerX = (GameConstants.SCREEN_WIDTH - 800) / 2;
-        slider.setBounds(x, y, 800, 100);
-        slider.setFont(new Font("Ink Free", Font.BOLD, 50));
+        int centerX = (GameConstants.SCREEN_WIDTH - 600) / 2;
+        slider.setBounds(x, y, 600, 80);
+        slider.setFont(new Font("Ink Free", Font.BOLD, 40));
         slider.setOpaque(false);
         slider.setMajorTickSpacing(1);
         slider.setPaintTicks(true);
         slider.setPaintLabels(true);
 
         JLabel speedLabel = new JLabel(label, SwingConstants.CENTER);
-        speedLabel.setFont(new Font("Ink Free", Font.BOLD, 60));
+        speedLabel.setFont(new Font("Ink Free", Font.BOLD, 40));
         speedLabel.setForeground(Color.WHITE);
-        speedLabel.setBounds(centerX, y - 60, 800, 90); // Positioned above slider
+        speedLabel.setBounds(centerX, y - 60, 600, 80); // Positioned above slider
 
         add(speedLabel);
 
@@ -157,6 +172,24 @@ public class MenuScreen extends JPanel {
             SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
             startHome();
         }
+        // keybinds button
+        if (x >= keybindButtonX && x <= (keybindButtonX + keybindButtonWidth) && 
+            y >= keybindButtonY && y <= (keybindButtonY + keybindButtonHeight)) {
+            SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
+            startKeybinds();
+        }
+        // song credits button
+        if (x >= creditsButtonX && x <= (creditsButtonX + creditsButtonWidth) && 
+            y >= creditsButtonY && y <= (creditsButtonY + creditsButtonHeight)) {
+            SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
+            startSongCredits();
+        }
+        // help/how to play button
+        if (x >= helpButtonX && x <= (helpButtonX + helpButtonWidth) && 
+            y >= helpButtonY && y <= (helpButtonY + helpButtonHeight)) {
+            SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
+            startHelp();
+        }
     }
 
     private void startHome() {
@@ -168,15 +201,72 @@ public class MenuScreen extends JPanel {
         frame.validate();
     }
 
+    private void startKeybinds() {
+        frame.remove(this); // remove menu screen
+        KeybindsScreen keybindsScreen = new KeybindsScreen(frame);
+        frame.add(keybindsScreen);
+        frame.pack();
+        keybindsScreen.requestFocusInWindow();
+        frame.validate();
+    }
+
+    private void startSongCredits() {
+        frame.remove(this); // remove menu screen
+        SongCreditsScreen songCreditsScreen = new SongCreditsScreen(frame);
+        frame.add(songCreditsScreen);
+        frame.pack();
+        songCreditsScreen.requestFocusInWindow();
+        frame.validate();
+    }
+
+    private void startHelp() {
+        frame.remove(this); // remove menu screen
+        HelpScreen helpScreen = new HelpScreen(frame);
+
+        JScrollPane scrollPane = new JScrollPane(
+            helpScreen,
+            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+            JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+        );
+
+        scrollPane.setPreferredSize(new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT));
+        // smoother scrolling
+        scrollPane.getVerticalScrollBar().setUnitIncrement(8);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(8);
+
+        scrollPane.setBorder(null);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setWheelScrollingEnabled(true);
+
+        frame.add(scrollPane);
+        frame.pack();
+        frame.setLocationRelativeTo(null); // center again
+        frame.revalidate();
+        helpScreen.requestFocusInWindow();
+        frame.validate();
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this); // background
         drawHomeButton(g); // home button
+        drawKeybindsButton(g); 
+        drawSongCreditsButton(g);
+        drawHelpButton(g);
 
         // top divider line
         g.setColor(new Color(255, 255, 255, 180));
-        g.fillRect(0, 170, getWidth(), 5);
+        g.fillRect(0, 160, getWidth(), 5);
+
+        // middle divider line
+        g.setColor(new Color(255, 255, 255, 180));
+        g.fillRect(0, 450, getWidth(), 5);
+
+        // bottom divider line
+        g.setColor(new Color(255, 255, 255, 180));
+        g.fillRect(0, 775, getWidth(), 5);
     }
 
     public void drawHomeButton(Graphics g) {
@@ -190,4 +280,40 @@ public class MenuScreen extends JPanel {
         g.drawString("Home", homeButtonX, homeButtonY); 
         homeButtonY = homeButtonY - metricsHome.getAscent(); 
     } 
+
+    public void drawKeybindsButton(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 45));
+        FontMetrics metricsKeybind = g.getFontMetrics();
+        keybindButtonX = 10; 
+        keybindButtonY = 850; 
+        keybindButtonWidth = metricsKeybind.stringWidth("Keybinds"); 
+        keybindButtonHeight = metricsKeybind.getHeight(); 
+        g.drawString("Keybinds", keybindButtonX, keybindButtonY); 
+        keybindButtonY = keybindButtonY - metricsKeybind.getAscent();
+    }
+
+    public void drawSongCreditsButton(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 45));
+        FontMetrics metricsCredits = g.getFontMetrics();
+        creditsButtonY = 850; 
+        creditsButtonWidth = metricsCredits.stringWidth("Song Credits"); 
+        creditsButtonX = (GameConstants.SCREEN_WIDTH - creditsButtonWidth) / 2;
+        creditsButtonHeight = metricsCredits.getHeight(); 
+        g.drawString("Song Credits", creditsButtonX, creditsButtonY); 
+        creditsButtonY = creditsButtonY - metricsCredits.getAscent();
+    }
+
+    public void drawHelpButton(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Ink Free", Font.BOLD, 45));
+        FontMetrics metricsHelp = g.getFontMetrics();
+        helpButtonY = 850; 
+        helpButtonWidth = metricsHelp.stringWidth("How to Play"); 
+        helpButtonX = GameConstants.SCREEN_WIDTH - helpButtonWidth - 10;
+        helpButtonHeight = metricsHelp.getHeight(); 
+        g.drawString("How to Play", helpButtonX, helpButtonY); 
+        helpButtonY = keybindButtonY - metricsHelp.getAscent();
+    }
 }

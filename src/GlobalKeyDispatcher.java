@@ -1,16 +1,15 @@
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
 
 public class GlobalKeyDispatcher implements KeyEventDispatcher {
     @Override
     public boolean dispatchKeyEvent(KeyEvent e) {
         if (e.getID() == KeyEvent.KEY_PRESSED) {
             switch (e.getKeyCode()) {
-                case KeyEvent.VK_L:
+                case KeyEvent.VK_PERIOD:
                     MusicManager.getInstance().skip();
                     break;
-                case KeyEvent.VK_J:
+                case KeyEvent.VK_COMMA:
                     MusicManager.getInstance().skipBackward(); // if you added it
                     break;
             }

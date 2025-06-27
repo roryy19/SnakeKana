@@ -54,7 +54,7 @@ public class MenuScreen extends JPanel {
         // No Death check box
         noDeathCheckBox = createCustomCheckbox(
             "No-Death Mode",
-            GameConstants.SCREEN_WIDTH - 400, 20,
+            GameConstants.SCREEN_WIDTH - 400, 10,
             GameSettings.isNoDeathMode(),
             () -> GameSettings.setDeathMode(noDeathCheckBox.isSelected()),
             checkedIcon, uncheckedIcon
@@ -64,7 +64,7 @@ public class MenuScreen extends JPanel {
         // Infinite mode check box
         infiniteCheckBox = createCustomCheckbox(
             "Infinite Mode",
-            GameConstants.SCREEN_WIDTH - 400, 100,
+            GameConstants.SCREEN_WIDTH - 400, 90,
             GameSettings.isInfiniteMode(),
             () -> GameSettings.setInfiniteMode(infiniteCheckBox.isSelected()),
             checkedIcon, uncheckedIcon
@@ -186,7 +186,7 @@ public class MenuScreen extends JPanel {
         }
         // help/how to play button
         if (x >= helpButtonX && x <= (helpButtonX + helpButtonWidth) && 
-            y >= helpButtonY && y <= (helpButtonY + helpButtonHeight)) {
+            y >= helpButtonY + 25 && y <= (helpButtonY + helpButtonHeight + 25)) {
             SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
             startHelp();
         }

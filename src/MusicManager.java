@@ -14,9 +14,23 @@ public class MusicManager {
 
     private MusicManager() {
         // add music file paths 
-        tracks.add("/res/music/track1_In_Dreamland.wav");
-        tracks.add("/res/music/track2_Loading.wav");
-        tracks.add("/res/music/track3_2_00AM.wav");
+        tracks.add("/res/music/Lukrembo - Apple Tree.wav");
+        tracks.add("/res/music/Lukrembo - Concierge Lounge.wav");
+        tracks.add("/res/music/Lukrembo - Early Morning In Winter.wav");
+        tracks.add("/res/music/Lukrembo - Flower Cup.wav");
+        tracks.add("/res/music/Lukrembo - Green Symphony.wav");
+
+        tracks.add("/res/music/Lukrembo - Hello.wav");
+        tracks.add("/res/music/Lukrembo - I Snowboard.wav");
+        tracks.add("/res/music/Lukrembo - Jay.wav");
+        tracks.add("/res/music/Lukrembo - Spaceship.wav");
+        tracks.add("/res/music/Lukrembo - Tea Cozy.wav");
+
+        tracks.add("/res/music/Lukrembo - Train Covered In White.wav");
+        tracks.add("/res/music/Lukrembo - Until Late At Night.wav");
+        tracks.add("/res/music/Lukrembo - Vintage Store.wav");
+        tracks.add("/res/music/Lukrembo - Wintry Street.wav");
+        tracks.add("/res/music/Lukrembo - Wooden Table.wav");
     }
 
     public static MusicManager getInstance() {
@@ -89,6 +103,10 @@ public class MusicManager {
 
     public float getVolume() {
         return volume;
+    }
+
+    public int getCurrentTrackIndex() {
+        return currentTrackIndex;
     }
 
     public void stop() {

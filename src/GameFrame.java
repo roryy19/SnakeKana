@@ -8,7 +8,7 @@ public class GameFrame extends JFrame{
 		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new GlobalKeyDispatcher());
 		SoundManager.getInstance();
 		MusicManager.getInstance().play();
-		this.add(new HomeScreen(this));
+		this.add(new LoadingScreen(this));
 		this.setTitle("SnakeKana");
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setResizable(false);

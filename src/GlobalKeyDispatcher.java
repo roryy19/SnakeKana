@@ -10,7 +10,7 @@ public class GlobalKeyDispatcher implements KeyEventDispatcher {
                     MusicManager.getInstance().skip();
                     break;
                 case KeyEvent.VK_COMMA:
-                    MusicManager.getInstance().skipBackward(); // if you added it
+                    MusicManager.getInstance().skipBackward(); 
                     break;
             }
         }

@@ -15,13 +15,13 @@ public class PauseOverlay extends JPanel{
     private int homeButtonY;
     private int homeButtonWidth;
     private int homeButtonHeight;
-    
+
     public PauseOverlay(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
         setOpaque(false);
         setFocusable(false);
         setVisible(false);
-        setLayout(null); // so we can place stuff freely
+        setLayout(null); 
 
         addMouseListener(new MouseAdapter() {
             @Override

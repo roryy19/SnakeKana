@@ -29,6 +29,8 @@ public class HomeScreen extends JPanel {
 
     private Image backgroundImage1;
 
+     private ExitOverlay exitOverlay;
+
     public HomeScreen(JFrame frame) {
         this.frame = frame;
 
@@ -92,6 +94,24 @@ public class HomeScreen extends JPanel {
                 hiraganaButton.setSelected(true);
                 break;
         }
+
+        exitOverlay = new ExitOverlay(this);
+        exitOverlay.setBounds(0, 0, GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT);
+        exitOverlay.setVisible(false);
+        this.setLayout(null);
+        frame.setGlassPane(exitOverlay);  // put overlay above the entire window
+
+        // ESC opens the exit overlay no matter which child has focus
+        InputMap im = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap am = getActionMap();
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "showExit");
+        am.put("showExit", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                exitMenu();
+                repaint();
+            }
+        });
     }
 
     private void checkClick(int x, int y) {
@@ -245,5 +265,18 @@ public class HomeScreen extends JPanel {
         chartButtonWidth = Math.max(metricschart.stringWidth(line1), metricschart.stringWidth(line2));
         chartButtonHeight = 2 * lineSpacing;
         chartButtonY = chartButtonY - metricschart.getAscent(); // top Y for click detection
+    }
+
+    public void exitMenu() {
+        exitOverlay.setVisible(true);
+        exitOverlay.requestFocusInWindow();
+    }
+
+    public void exitGame() {
+        System.exit(0);
+    }
+
+    public void resumeHome() {
+        exitOverlay.setVisible(false);
     }
 }

@@ -90,13 +90,16 @@ public class KeybindsScreen extends JPanel{
         g.drawString("Pause Game:", 10, 420);
         g.drawString("Escape", 325, 420);
 
-        g.drawString("Submit Answer:", 10, 490);
-        g.drawString("Enter", 325, 490);
+        g.drawString("Close Game:", 10, 490);
+        g.drawString("Escape (from home screen)", 325, 490);
 
-        g.drawString("Skip Song:", 10, 560);
-        g.drawString("> (period)", 325, 560);
+        g.drawString("Submit Answer:", 10, 560);
+        g.drawString("Enter", 325, 560);
 
-        g.drawString("Previous Song:", 10, 630);
-        g.drawString("< (comma)", 325, 630);
+        g.drawString("Skip Song:", 10, 630);
+        g.drawString("> (period)", 325, 630);
+
+        g.drawString("Previous Song:", 10, 700);
+        g.drawString("< (comma)", 325, 700);
     }
 }

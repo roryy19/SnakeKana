@@ -21,7 +21,7 @@ public class PauseOverlay extends JPanel{
         setOpaque(false);
         setFocusable(false);
         setVisible(false);
-        setLayout(null); // so we can place stuff freely
+        setLayout(null); 
 
         addMouseListener(new MouseAdapter() {
             @Override

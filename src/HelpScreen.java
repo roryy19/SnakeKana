@@ -25,11 +25,11 @@ public class HelpScreen extends JPanel{
                 checkClick(e.getX(), e.getY());
             }
         });
-    } 
+    }
 
     private void checkClick(int x, int y) {
         // home button
-        if (x >= backButtonX && x <= (backButtonX + backButtonWidth) && 
+        if (x >= backButtonX && x <= (backButtonX + backButtonWidth) &&
             y >= backButtonY && y <= (backButtonY + backButtonHeight)) {
             SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
             startBack();
@@ -50,8 +50,10 @@ public class HelpScreen extends JPanel{
 
             MenuScreen menuScreen = new MenuScreen(topFrame);
             topFrame.add(menuScreen);
-            topFrame.pack();
-            topFrame.setLocationRelativeTo(null);
+            if (!GameSettings.isFullscreen()) {
+                topFrame.pack();
+                topFrame.setLocationRelativeTo(null);
+            }
             topFrame.revalidate();
             topFrame.repaint();
             menuScreen.requestFocusInWindow();
@@ -73,52 +75,62 @@ public class HelpScreen extends JPanel{
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsBack = g.getFontMetrics();
-        backButtonX = 10; 
-        backButtonY = 70; 
-        backButtonWidth = metricsBack.stringWidth("Back"); 
-        backButtonHeight = metricsBack.getHeight(); 
-        g.drawString("Back", backButtonX, backButtonY); 
-        backButtonY = backButtonY - metricsBack.getAscent(); 
-    } 
-    
+        // Anchor to top-left
+        backButtonX = 10;
+        backButtonY = 70;
+        backButtonWidth = metricsBack.stringWidth("Back");
+        backButtonHeight = metricsBack.getHeight();
+        g.drawString("Back", backButtonX, backButtonY);
+        backButtonY = backButtonY - metricsBack.getAscent();
+    }
+
     public void drawHelpText(Graphics g) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 35));
 
-        g.drawString("Snake Game:", 10, 140);
-        g.drawString("Eat the correct characters.", 350, 140);
+        // Center the help text content
+        int contentWidth = 900;
+        int offsetX = (getWidth() - contentWidth) / 2;
+        int labelX = offsetX;
+        int valueX = offsetX + 340;
 
-        g.drawString("Goal:", 10, 210);
-        g.drawString("Choose all correct kana (based on mode).", 350, 210);
+        g.drawString("Snake Game:", labelX, 140);
+        g.drawString("Eat the correct characters.", valueX, 140);
 
-        g.drawString("Accuracy:", 10, 280);
-        g.drawString("Correct / Total chosen characters.", 350, 280);
+        g.drawString("Goal:", labelX, 210);
+        g.drawString("Choose all correct kana (based on mode).", valueX, 210);
 
-        g.drawString("No Death Mode:", 10, 350);
-        g.drawString("Go through your body and screen edges.", 350, 350);
+        g.drawString("Accuracy:", labelX, 280);
+        g.drawString("Correct / Total chosen characters.", valueX, 280);
 
-        g.drawString("Infinite Mode:", 10, 420);
-        g.drawString("Play forever unless you die or quit.", 350, 420);
+        g.drawString("No Death Mode:", labelX, 350);
+        g.drawString("Go through your body and screen edges.", valueX, 350);
 
-        g.drawString("\"Wrong\" Kana:", 10, 490);
-        g.drawString("Adds up to 10 fake kana to confuse you.", 350, 490);
+        g.drawString("Infinite Mode:", labelX, 420);
+        g.drawString("Play forever unless you die or quit.", valueX, 420);
 
-        g.drawString("Snake Speed:", 10, 560);
-        g.drawString("1 = slowest, 10 = fastest.", 350, 560);
+        g.drawString("\"Wrong\" Kana:", labelX, 490);
+        g.drawString("Adds up to 10 fake kana to confuse you.", valueX, 490);
 
-        g.drawString("Kana Quiz:", 10, 630);
-        g.drawString("Choose Hiragana or Katakana.", 350, 630);
+        g.drawString("Snake Speed:", labelX, 560);
+        g.drawString("1 = slowest, 10 = fastest.", valueX, 560);
 
-        g.drawString("Answer:", 10, 700);
-        g.drawString("Type in English and hit Enter or Submit.", 350, 700);
+        g.drawString("Kana Quiz:", labelX, 630);
+        g.drawString("Choose Hiragana or Katakana.", valueX, 630);
 
-        g.drawString("Skip:", 10, 770);
-        g.drawString("Removes kana from current quiz.", 350, 770);
+        g.drawString("Answer:", labelX, 700);
+        g.drawString("Type in English and hit Enter or Submit.", valueX, 700);
 
-        g.drawString("Hint (First Letter):", 10, 840);
-        g.drawString("Shows first letter briefly, does not remove from quiz.", 350, 840);
+        g.drawString("Skip:", labelX, 770);
+        g.drawString("Removes kana from current quiz.", valueX, 770);
 
-        g.drawString("Hint (Full Kana):", 10, 910);
-        g.drawString("Shows full kana briefly, does not remove from quiz.", 350, 910);
+        g.drawString("Hint (First Letter):", labelX, 840);
+        g.drawString("Shows first letter briefly, does not remove from quiz.", valueX, 840);
+
+        g.drawString("Hint (Full Kana):", labelX, 910);
+        g.drawString("Shows full kana briefly, does not remove from quiz.", valueX, 910);
+
+        g.drawString("Toggle Fullscreen:", labelX, 980);
+        g.drawString("Press F11 to toggle fullscreen mode.", valueX, 980);
     }
 }

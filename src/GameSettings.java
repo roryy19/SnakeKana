@@ -6,6 +6,7 @@ public class GameSettings {
     private static boolean infiniteMode = false;
     private static int snakeSpeedSliderValue = 5;
     private static int wrongKanaAmount = 3;
+    private static boolean fullscreen = false;
 
     // snake color
     public static void setSnakeColor(Color newColor) {
@@ -48,5 +49,13 @@ public class GameSettings {
     }
     public static int getWrongKanaAmount() {
         return wrongKanaAmount;
+    }
+
+    // Fullscreen mode
+    public static void setFullscreen(boolean value) {
+        fullscreen = value;
+    }
+    public static boolean isFullscreen() {
+        return fullscreen;
     }
 }

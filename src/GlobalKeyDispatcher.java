@@ -12,6 +12,9 @@ public class GlobalKeyDispatcher implements KeyEventDispatcher {
                 case KeyEvent.VK_COMMA:
                     MusicManager.getInstance().skipBackward(); // if you added it
                     break;
+                case KeyEvent.VK_F11:
+                    GameFrame.getInstance().toggleFullscreen();
+                    break;
             }
         }
         return false; // Let other components still process the key

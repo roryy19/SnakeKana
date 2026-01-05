@@ -32,6 +32,16 @@ public class SongCreditsScreen extends JPanel{
                 checkClick(e.getX(), e.getY());
             }
         });
+
+        // Handle resize events
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                ScreenHelper.updateDimensions(getWidth(), getHeight());
+                repaint();
+            }
+        });
+
         // update the track index every second
         Timer updateTimer = new Timer(100, e -> {
             int newIndex = MusicManager.getInstance().getCurrentTrackIndex();
@@ -55,11 +65,19 @@ public class SongCreditsScreen extends JPanel{
             }
         });
         updateTimer.start();
-    } 
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        if (GameSettings.isFullscreen()) {
+            return new Dimension(ScreenHelper.getWidth(), ScreenHelper.getHeight());
+        }
+        return new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT);
+    }
 
     private void checkClick(int x, int y) {
         // home button
-        if (x >= backButtonX && x <= (backButtonX + backButtonWidth) && 
+        if (x >= backButtonX && x <= (backButtonX + backButtonWidth) &&
             y >= backButtonY && y <= (backButtonY + backButtonHeight)) {
             SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
             startBack();
@@ -70,9 +88,12 @@ public class SongCreditsScreen extends JPanel{
         frame.remove(this); // remove menu screen
         MenuScreen menuScreen = new MenuScreen(frame);
         frame.add(menuScreen);
-        frame.pack();
+        if (!GameSettings.isFullscreen()) {
+            frame.pack();
+        }
         menuScreen.requestFocusInWindow();
-        frame.validate();
+        frame.revalidate();
+        frame.repaint();
     }
 
     protected void paintComponent(Graphics g) {
@@ -88,11 +109,14 @@ public class SongCreditsScreen extends JPanel{
         // show current song playing
         if (showNowPlayingOverlay && currentTrackIndex >= 0) {
             g.setColor(new Color(0, 0, 0, 180));
-            g.fillRect(0, getHeight() / 2 - 30, getWidth(), 60);
+            int overlayY = ScreenHelper.centerY(60);
+            g.fillRect(0, overlayY, getWidth(), 60);
             g.setColor(Color.WHITE);
             g.setFont(new Font("Ink Free", Font.BOLD, 40));
-            g.drawString("Now Playing: " + (currentTrackIndex + 1) + ". " +
-                getSongTitle(currentTrackIndex), 30, getHeight() / 2 + 10);
+            String nowPlayingText = "Now Playing: " + (currentTrackIndex + 1) + ". " + getSongTitle(currentTrackIndex);
+            FontMetrics metrics = g.getFontMetrics();
+            int textX = ScreenHelper.centerX(metrics.stringWidth(nowPlayingText));
+            g.drawString(nowPlayingText, textX, overlayY + 40);
         }
     }
 
@@ -100,14 +124,15 @@ public class SongCreditsScreen extends JPanel{
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsBack = g.getFontMetrics();
-        backButtonX = 10; 
-        backButtonY = 70; 
-        backButtonWidth = metricsBack.stringWidth("Back"); 
-        backButtonHeight = metricsBack.getHeight(); 
-        g.drawString("Back", backButtonX, backButtonY); 
-        backButtonY = backButtonY - metricsBack.getAscent(); 
+        // Anchor to top-left
+        backButtonX = ScreenHelper.fromLeft(10);
+        backButtonY = 70;
+        backButtonWidth = metricsBack.stringWidth("Back");
+        backButtonHeight = metricsBack.getHeight();
+        g.drawString("Back", backButtonX, backButtonY);
+        backButtonY = backButtonY - metricsBack.getAscent();
     }
-    
+
     public void drawCredits(Graphics g) {
         g.setFont(new Font("Ink Free", Font.BOLD, 30));
 
@@ -117,18 +142,24 @@ public class SongCreditsScreen extends JPanel{
             "Train Covered In White", "Until Late At Night", "Vintage Store", "Wintry Street", "Wooden Table"
         };
 
+        // Center the credits list horizontally
+        int contentWidth = 600; // Approximate width of the longest credit line
+        int offsetX = ScreenHelper.centerX(contentWidth);
+
         for (int i = 0; i < titles.length; i++) {
             if (i == currentTrackIndex) {
                 g.setColor(Color.YELLOW); // highlight current song
             } else {
                 g.setColor(Color.WHITE);
             }
-            g.drawString((i + 1) + ". " + titles[i] + " by Lukrembo", 10, 130 + (45 * i));
+            g.drawString((i + 1) + ". " + titles[i] + " by Lukrembo", offsetX, 130 + (45 * i));
         }
 
         g.setColor(Color.WHITE);
-        g.drawString("Source: https://freetouse.com/music", 10, 850);
-        g.drawString("Free To Use Music for Videos", 10, 880);
+        // Anchor source info to bottom-left
+        int bottomY = ScreenHelper.fromBottom(50, 0);
+        g.drawString("Source: https://freetouse.com/music", offsetX, bottomY);
+        g.drawString("Free To Use Music for Videos", offsetX, bottomY + 30);
     }
 
 
@@ -140,5 +171,5 @@ public class SongCreditsScreen extends JPanel{
         };
         return titles[index];
     }
-    
+
 }

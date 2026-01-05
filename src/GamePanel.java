@@ -11,18 +11,17 @@ public class GamePanel extends JPanel implements ActionListener{
     static final int topBarHeight = 100;
     int playAreaHeight;
     int GAME_UNITS; // amount of units that can fit on screen
-    // int DELAY = 75; // higher = slower game
-    
+
     // body of snake
     final int x[] = new int[1000]; // snake wont be bigger than game
-    final int y[] = new int[1000]; 
+    final int y[] = new int[1000];
     int bodyParts = 6; // initial # of body parts
-    
-    int score; 
-    int total;   
+
+    int score;
+    int total;
     int kanaX;
     int kanaY;
-    
+
     boolean newLevelCondition = true;
     String newLevelString = "";
 
@@ -32,7 +31,7 @@ public class GamePanel extends JPanel implements ActionListener{
     "Level 2: Speed = 20",
     "Level 3: Speed = 30",
     "Level 4: Speed = 40",
-    "*FINAL LEVEL*: Speed = 50" 
+    "*FINAL LEVEL*: Speed = 50"
     };
     int currentLevel = 0;
 
@@ -45,7 +44,7 @@ public class GamePanel extends JPanel implements ActionListener{
     private int homeButtonY;
     private int homeButtonWidth;
     private int homeButtonHeight;
-    
+
     char direction = 'R'; // snake begins game going right
 
     boolean running = false;
@@ -88,7 +87,7 @@ public class GamePanel extends JPanel implements ActionListener{
     ImageIcon headRightIcon = new ImageIcon(getClass().getResource("/res/snake/head_right.png"));
     ImageIcon headUpIcon = new ImageIcon(getClass().getResource("/res/snake/head_up.png"));
     ImageIcon headDownIcon = new ImageIcon(getClass().getResource("/res/snake/head_down.png"));
- 
+
     ImageIcon tailLeftIcon = new ImageIcon(getClass().getResource("/res/snake/tail_left.png"));
     ImageIcon tailRightIcon = new ImageIcon(getClass().getResource("/res/snake/tail_right.png"));
     ImageIcon tailUpIcon = new ImageIcon(getClass().getResource("/res/snake/tail_up.png"));
@@ -114,14 +113,50 @@ public class GamePanel extends JPanel implements ActionListener{
         kanaManager = new KanaManager(kanaMode);
 
         pauseOverlay = new PauseOverlay(this);
-        pauseOverlay.setBounds(0, 0, GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT);
         pauseOverlay.setVisible(false);
         this.setLayout(null);
         this.add(pauseOverlay);
 
+        // Handle resize events
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                ScreenHelper.updateDimensions(getWidth(), getHeight());
+                // Update pause overlay bounds to fill entire screen
+                pauseOverlay.setBounds(0, 0, getWidth(), getHeight());
+                repaint();
+            }
+        });
+
         startGame();
     }
-    
+
+    @Override
+    public Dimension getPreferredSize() {
+        if (GameSettings.isFullscreen()) {
+            return new Dimension(ScreenHelper.getWidth(), ScreenHelper.getHeight());
+        }
+        return new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT);
+    }
+
+    // Get the game area dimensions (fixed 900x900)
+    private int getGameWidth() {
+        return GameConstants.SCREEN_WIDTH;
+    }
+
+    private int getGameHeight() {
+        return GameConstants.SCREEN_HEIGHT;
+    }
+
+    // Get the offset for centering the game area
+    private int getOffsetX() {
+        return ScreenHelper.getGameAreaX();
+    }
+
+    private int getOffsetY() {
+        return ScreenHelper.getGameAreaY();
+    }
+
     public void startGame() {
         // Wait for layout sizing if needed
         if (getWidth() == 0 || getHeight() == 0) {
@@ -129,13 +164,15 @@ public class GamePanel extends JPanel implements ActionListener{
             return;
         }
 
-        playAreaHeight = getHeight() - topBarHeight;
-        int widthUnits = getWidth() / GameConstants.UNIT_SIZE;
-        int heightUnits = getHeight() / GameConstants.UNIT_SIZE;
+        // Use fixed game dimensions for calculations
+        playAreaHeight = getGameHeight() - topBarHeight;
+        int widthUnits = getGameWidth() / GameConstants.UNIT_SIZE;
+        int heightUnits = getGameHeight() / GameConstants.UNIT_SIZE;
         GAME_UNITS = widthUnits * heightUnits;
 
-        x[0] = GameConstants.SCREEN_WIDTH / 2;
-        y[0] = (GameConstants.SCREEN_HEIGHT + GamePanel.topBarHeight) / 2;
+        // Initialize snake position in game coordinates (not screen coordinates)
+        x[0] = getGameWidth() / 2;
+        y[0] = (getGameHeight() + GamePanel.topBarHeight) / 2;
 
         newKanas();
         running = true;
@@ -146,75 +183,83 @@ public class GamePanel extends JPanel implements ActionListener{
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(backgroundImage1, 0, 0, getWidth(), getHeight(), this); //background
+        // Background fills entire screen
+        g.drawImage(backgroundImage1, 0, 0, getWidth(), getHeight(), this);
         draw(g);
+
+        int offsetX = getOffsetX();
+        int offsetY = getOffsetY();
 
         if (newFuriganaCondition) { // show furigana text
             g.setFont(new Font("Ink Free", Font.BOLD, 60));
             FontMetrics metricsFuri = g.getFontMetrics();
-            int x = (getWidth() - metricsFuri.stringWidth(furiganaString)) / 2;
-            int y = (getHeight() / 2 - metricsFuri.getAscent());
+            int textX = offsetX + (getGameWidth() - metricsFuri.stringWidth(furiganaString)) / 2;
+            int textY = offsetY + (getGameHeight() / 2 - metricsFuri.getAscent());
 
             // draw outline (black)
             g.setColor(Color.BLACK);
             for (int dx = -2; dx <= 2; dx++) {
                 for (int dy = -2; dy <= 2; dy++) {
                     if (dx != 0 || dy != 0) {
-                        g.drawString(furiganaString, x + dx, y + dy);
+                        g.drawString(furiganaString, textX + dx, textY + dy);
                     }
                 }
             }
             // draw main text (yellow)
             g.setColor(Color.YELLOW);
-            g.drawString(furiganaString, x, y);
+            g.drawString(furiganaString, textX, textY);
         }
 
         if (newChoiceCondition) { // show result of user's kana choice
             g.setFont(new Font("Ink Free", Font.BOLD, 60));
             FontMetrics metricsChoice = g.getFontMetrics();
-            int x = (getWidth() - metricsChoice.stringWidth(choiceString)) / 2;
-            int y = 150;
+            int textX = offsetX + (getGameWidth() - metricsChoice.stringWidth(choiceString)) / 2;
+            int textY = offsetY + 150;
 
             // draw outline (black)
             g.setColor(Color.BLACK);
             for (int dx = -2; dx <= 2; dx++) {
                 for (int dy = -2; dy <= 2; dy++) {
                     if (dx != 0 || dy != 0) {
-                        g.drawString(choiceString, x + dx, y + dy);
+                        g.drawString(choiceString, textX + dx, textY + dy);
                     }
                 }
             }
             // draw main text (yellow)
             if (choiceString == "Correct!") g.setColor(Color.GREEN);
             else g.setColor(Color.RED);
-            g.drawString(choiceString, x, y);
+            g.drawString(choiceString, textX, textY);
         }
     }
 
     public void drawHeaderBar(Graphics g) {
-        int screenWidth = getWidth();
-    
-        // Background
+        int offsetX = getOffsetX();
+        int offsetY = getOffsetY();
+        int gameWidth = getGameWidth();
+
+        // Background - spans the game area width
         g.setColor(new Color(0, 0, 0, 150));
-        g.fillRect(0, 0, screenWidth, topBarHeight);
+        g.fillRect(offsetX, offsetY, gameWidth, topBarHeight);
 
         // Centered romaji prompt
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 60));
         FontMetrics metrics = g.getFontMetrics();
         String prompt = "Find: " + correctKana.romaji;
-        int x = (screenWidth - metrics.stringWidth(prompt)) / 2;
-        g.drawString(prompt, x, 70);
+        int promptX = offsetX + (gameWidth - metrics.stringWidth(prompt)) / 2;
+        g.drawString(prompt, promptX, offsetY + 70);
 
-        // Score (left)
+        // Score (left of game area)
         g.setColor(Color.CYAN);
         g.setFont(new Font("Ink Free", Font.BOLD, 50));
-        g.drawString("Score: " + score, 10, 50);
+        g.drawString("Score: " + score, offsetX + 10, offsetY + 50);
 
-        // Accuracy (right)
+        // Accuracy (right of game area)
         g.setColor(Color.ORANGE);
         g.setFont(new Font("Ink Free", Font.BOLD, 40));
-        g.drawString("Accuracy: " + getAccuracy() + "%", screenWidth - 300, 50);
+        FontMetrics accMetrics = g.getFontMetrics();
+        String accText = "Accuracy: " + getAccuracy() + "%";
+        g.drawString(accText, offsetX + gameWidth - accMetrics.stringWidth(accText) - 10, offsetY + 50);
     }
 
     public int getAccuracy() {
@@ -224,26 +269,49 @@ public class GamePanel extends JPanel implements ActionListener{
     }
 
     public void draw(Graphics g) {
+        int offsetX = getOffsetX();
+        int offsetY = getOffsetY();
+
         if (running) {
             drawHeaderBar(g);
 
-            // draw kanas (correct and wrong)
+            // draw kanas (correct and wrong) with offset
             for (PlacedKana pk : placedKanas) {
-                g.drawImage(pk.kana.image, pk.x - 10, pk.y - 15, GameConstants.UNIT_SIZE * 2, GameConstants.UNIT_SIZE * 2, this);
+                g.drawImage(pk.kana.image, offsetX + pk.x - 10, offsetY + pk.y - 15, GameConstants.UNIT_SIZE * 2, GameConstants.UNIT_SIZE * 2, this);
             }
-            
+
             drawSnake(g);
+
+            // Draw border around game area (3px thick)
+            drawGameBorder(g);
         } else if (victoryStatus) {
             startVictory(g);
         } else {
-            gameOver(g); 
-        }   
+            gameOver(g);
+        }
+    }
+
+    private void drawGameBorder(Graphics g) {
+        int offsetX = getOffsetX();
+        int offsetY = getOffsetY();
+        int gameWidth = getGameWidth();
+        int gameHeight = getGameHeight();
+
+        g.setColor(Color.BLACK);
+        // Draw 3 rectangles for a 3px thick border
+        g.drawRect(offsetX, offsetY + topBarHeight, gameWidth - 1, gameHeight - topBarHeight - 1);
+        g.drawRect(offsetX + 1, offsetY + topBarHeight + 1, gameWidth - 3, gameHeight - topBarHeight - 3);
+        g.drawRect(offsetX + 2, offsetY + topBarHeight + 2, gameWidth - 5, gameHeight - topBarHeight - 5);
     }
 
     public void drawSnake(Graphics g) {
+        int offsetX = getOffsetX();
+        int offsetY = getOffsetY();
+
         for (int i = 0; i < bodyParts; i++) {
-            int xPos = x[i];
-            int yPos = y[i];
+            // Apply offset for screen rendering
+            int xPos = offsetX + x[i];
+            int yPos = offsetY + y[i];
 
             if (i == 0) { //HEAD
                 switch (direction) {
@@ -266,13 +334,13 @@ public class GamePanel extends JPanel implements ActionListener{
                 int xPosBefore = x[i - 1];
                 int yPosBefore = y[i - 1];
 
-                if (xPos == xPosBefore && yPos < yPosBefore) { // UP
+                if (x[i] == xPosBefore && y[i] < yPosBefore) { // UP
                     g.drawImage(tailUpIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
                 }
-                else if (xPos == xPosBefore && yPos > yPosBefore) { // DOWN
+                else if (x[i] == xPosBefore && y[i] > yPosBefore) { // DOWN
                     g.drawImage(tailDownIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
                 }
-                else if (xPos > xPosBefore && yPos == yPosBefore) { // RIGHT
+                else if (x[i] > xPosBefore && y[i] == yPosBefore) { // RIGHT
                     g.drawImage(tailRightIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
                 }
                 else { // LEFT
@@ -296,7 +364,7 @@ public class GamePanel extends JPanel implements ActionListener{
                 }
                 else if ((directionFromBefore.equals("DOWN") && directionToAfter.equals("LEFT")) ||
                 (directionFromBefore.equals("RIGHT") && directionToAfter.equals("UP"))){ // DOWN and LEFT turn or RIGHT and UP turn
-                    g.drawImage(bodyBottomLeftIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this); 
+                    g.drawImage(bodyBottomLeftIcon.getImage(), xPos, yPos, GameConstants.UNIT_SIZE, GameConstants.UNIT_SIZE, this);
                 }
                 else if (directionFromBefore.equals(directionToAfter)) {
                     if (directionFromBefore.equals("UP") || directionFromBefore.equals("DOWN")) {
@@ -311,17 +379,17 @@ public class GamePanel extends JPanel implements ActionListener{
 
     String getDirection(int beforeX, int beforeY, int afterX, int afterY) {
         int unit = GameConstants.UNIT_SIZE;
-        int screenWidth = getWidth();
-        int screenHeight = getHeight();
+        int gameWidth = getGameWidth();
+        int gameHeight = getGameHeight();
         int topLimit = GamePanel.topBarHeight;
 
         // Corrected Wraparound (horizontal)
-    if (beforeX == screenWidth - unit && afterX == 0) return "LEFT";  // RIGHT -> LEFT
-    if (beforeX == 0 && afterX == screenWidth - unit) return "RIGHT"; // LEFT -> RIGHT
+    if (beforeX == gameWidth - unit && afterX == 0) return "LEFT";  // RIGHT -> LEFT
+    if (beforeX == 0 && afterX == gameWidth - unit) return "RIGHT"; // LEFT -> RIGHT
 
     // Corrected Wraparound (vertical)
-    if (beforeY == screenHeight - unit && afterY == topLimit) return "DOWN";    // DOWN -> TOP
-    if (beforeY == topLimit && afterY == screenHeight - unit) return "UP";  // UP -> BOTTOM
+    if (beforeY == gameHeight - unit && afterY == topLimit) return "DOWN";    // DOWN -> TOP
+    if (beforeY == topLimit && afterY == gameHeight - unit) return "UP";  // UP -> BOTTOM
 
         if (beforeX == afterX && beforeY > afterY) return "UP";
         if (beforeX == afterX && beforeY < afterY) return "DOWN";
@@ -348,7 +416,7 @@ public class GamePanel extends JPanel implements ActionListener{
         do {
             correctKana = kanaManager.randomKana();
         } while (gottenCorrect.contains(correctKana));
-        
+
         // add to array list
         PlacedKana correctPK = new PlacedKana(kanaX, kanaY, correctKana, true);
         placedKanas.add(correctPK);
@@ -373,8 +441,12 @@ public class GamePanel extends JPanel implements ActionListener{
     }
 
     public void getCoords() {
-        int unitsWide = getWidth() / GameConstants.UNIT_SIZE;
-        int unitsHigh = getHeight() / GameConstants.UNIT_SIZE;
+        // Use fixed game dimensions for coordinate calculations
+        int gameWidth = getGameWidth();
+        int gameHeight = getGameHeight();
+
+        int unitsWide = gameWidth / GameConstants.UNIT_SIZE;
+        int unitsHigh = gameHeight / GameConstants.UNIT_SIZE;
 
         int minX = 1; // skip 0th column
         int maxX = unitsWide - 2; // skip last column
@@ -421,7 +493,7 @@ public class GamePanel extends JPanel implements ActionListener{
         for (PlacedKana pk : placedKanas) {
             int distanceKanaX = Math.abs(x - pk.x);
             int distanceKanaY = Math.abs(y - pk.y);
-            
+
             if (distanceKanaX <= GameConstants.UNIT_SIZE && distanceKanaY <= GameConstants.UNIT_SIZE) {
                 return true;
             }
@@ -433,12 +505,12 @@ public class GamePanel extends JPanel implements ActionListener{
     public void move() {
         movedThisTick = true;
         // shifting body parts of snake
-        for (int i = bodyParts; i > 0; i--) { 
+        for (int i = bodyParts; i > 0; i--) {
             x[i] = x[i-1];
             y[i] = y[i-1];
         }
         // change direction of snake
-        switch(direction) { 
+        switch(direction) {
             case 'U':
                 y[0] = y[0] - GameConstants.UNIT_SIZE;
                 break;
@@ -459,7 +531,7 @@ public class GamePanel extends JPanel implements ActionListener{
         for (PlacedKana pk : placedKanas) {
             if ((x[0] == pk.x) && (y[0] == pk.y)) {
                 // chose correct kana
-                if (pk.correct) { 
+                if (pk.correct) {
                     showChoiceResult(true);
                     if (!GameSettings.isInfiniteMode()) {
                         gottenCorrect.add(correctKana);
@@ -482,7 +554,7 @@ public class GamePanel extends JPanel implements ActionListener{
 
     public void showNewLevelText() {
         /*
-        LEVEL   DELAY 
+        LEVEL   DELAY
         1       75
         2       65
         3       55
@@ -539,18 +611,22 @@ public class GamePanel extends JPanel implements ActionListener{
     }
 
     public void checkCollision() {
+        // Use fixed game dimensions for collision detection
+        int gameWidth = getGameWidth();
+        int gameHeight = getGameHeight();
+
         // no death mode ON, no collions are ignored
         if (GameSettings.isNoDeathMode()) {
             if (x[0] < 0) {
-                x[0] = getWidth() - GameConstants.UNIT_SIZE;
+                x[0] = gameWidth - GameConstants.UNIT_SIZE;
             }
-            if (x[0] > getWidth() - GameConstants.UNIT_SIZE) {
+            if (x[0] > gameWidth - GameConstants.UNIT_SIZE) {
                 x[0] = 0;
             }
             if (y[0] < topBarHeight) {
-                y[0] = getHeight() - GameConstants.UNIT_SIZE;
+                y[0] = gameHeight - GameConstants.UNIT_SIZE;
             }
-            if (y[0] > getHeight() - GameConstants.UNIT_SIZE) {
+            if (y[0] > gameHeight - GameConstants.UNIT_SIZE) {
                 y[0] = topBarHeight;
             }
             return;
@@ -558,7 +634,7 @@ public class GamePanel extends JPanel implements ActionListener{
 
         // no death mode OFF, so collisions CAN happen
         // check if head collides w/ body, iterate through body parts
-        for (int i = bodyParts; i > 0; i--) { 
+        for (int i = bodyParts; i > 0; i--) {
             if ((x[0] == x[i]) && (y[0] == y[i])) { // one part of body collided w/ head
                 running = false; // end game
             }
@@ -568,7 +644,7 @@ public class GamePanel extends JPanel implements ActionListener{
             running = false;
         }
         // check if head touches right border
-        if (x[0] > getWidth() - GameConstants.UNIT_SIZE) {
+        if (x[0] > gameWidth - GameConstants.UNIT_SIZE) {
             running = false;
         }
         // check if head touches top border
@@ -576,7 +652,7 @@ public class GamePanel extends JPanel implements ActionListener{
             running = false;
         }
         // check if head touches bottom border
-        if (y[0] > getHeight() - GameConstants.UNIT_SIZE) {
+        if (y[0] > gameHeight - GameConstants.UNIT_SIZE) {
             running = false;
         }
         if (!running) {
@@ -585,18 +661,18 @@ public class GamePanel extends JPanel implements ActionListener{
         }
     }
 
-    public void checkClick(int x, int y) {
+    public void checkClick(int clickX, int clickY) {
         // play again button
         if (!running) { // top left origin
             //retry button
-            if (x >= retryButtonX && x <= (retryButtonX + retryButtonWidth) // within x coords
-                && y >= retryButtonY && y <= (retryButtonY + retryButtonHeight)) { // within y coords
+            if (clickX >= retryButtonX && clickX <= (retryButtonX + retryButtonWidth) // within x coords
+                && clickY >= retryButtonY && clickY <= (retryButtonY + retryButtonHeight)) { // within y coords
                 resetGame();
                 SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
             }
             // home button
-            if (x >= homeButtonX && x <= (homeButtonX + homeButtonWidth) && 
-            y >= homeButtonY && y <= (homeButtonY + homeButtonHeight)) {
+            if (clickX >= homeButtonX && clickX <= (homeButtonX + homeButtonWidth) &&
+            clickY >= homeButtonY && clickY <= (homeButtonY + homeButtonHeight)) {
                 startHome();
                 SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
             }
@@ -624,9 +700,12 @@ public class GamePanel extends JPanel implements ActionListener{
         frame.remove(this); // remove game screen
         HomeScreen homeScreen = new HomeScreen(frame);
         frame.add(homeScreen);
-        frame.pack();
+        if (!GameSettings.isFullscreen()) {
+            frame.pack();
+        }
         homeScreen.requestFocusInWindow();
-        frame.validate();
+        frame.revalidate();
+        frame.repaint();
     }
 
     public void pauseGame() {
@@ -641,63 +720,77 @@ public class GamePanel extends JPanel implements ActionListener{
     }
 
     public void startVictory(Graphics g) {
+        int offsetX = getOffsetX();
+        int offsetY = getOffsetY();
+        int gameWidth = getGameWidth();
+        int gameHeight = getGameHeight();
+        int centerY = offsetY + gameHeight / 3;
+
         // congrats text
         Graphics2D g2d = (Graphics2D) g;
-        
+
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font("Dialog",Font.PLAIN, 100));
         FontMetrics metricsCongratsJ = getFontMetrics(g2d.getFont());
-        g2d.drawString("おめでとう!", (getWidth() - metricsCongratsJ.stringWidth("おめでとう!")) / 2, getHeight() / 3 - 80);
+        g2d.drawString("おめでとう!", offsetX + (gameWidth - metricsCongratsJ.stringWidth("おめでとう!")) / 2, centerY - 80);
 
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free",Font.BOLD, 100));
         FontMetrics metricsCongrats = getFontMetrics(g.getFont());
-        g.drawString("Congrats!", (getWidth() - metricsCongrats.stringWidth("Congrats!")) / 2, getHeight() / 3);
+        g.drawString("Congrats!", offsetX + (gameWidth - metricsCongrats.stringWidth("Congrats!")) / 2, centerY);
 
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free",Font.BOLD, 60));
         FontMetrics metricsCongrats2 = getFontMetrics(g.getFont());
-        g.drawString("You got all the characters!", (getWidth() - metricsCongrats2.stringWidth("You got all the characters!")) / 2, getHeight() / 3 + 100);
+        g.drawString("You got all the characters!", offsetX + (gameWidth - metricsCongrats2.stringWidth("You got all the characters!")) / 2, centerY + 100);
 
         // accuracy
         g.setColor(new Color(0, 153, 153));
         g.setFont(new Font("Ink Free", Font.BOLD, 50));
         FontMetrics metricsAccuracy = getFontMetrics(g.getFont());
-        g.drawString("Accuracy: " + getAccuracy() + "%", (getWidth() - metricsAccuracy.stringWidth("Accuracy: " + getAccuracy() + "%")) / 2, 600);
-        
+        String accText = "Accuracy: " + getAccuracy() + "%";
+        g.drawString(accText, offsetX + (gameWidth - metricsAccuracy.stringWidth(accText)) / 2, offsetY + 600);
+
         g.setColor(new Color(0, 153, 153));
         g.setFont(new Font("Ink Free", Font.BOLD, 50));
         FontMetrics metricsAccuracy2 = getFontMetrics(g.getFont());
-        g.drawString("Correct: " + score + ", Total: " + total, (getWidth() - metricsAccuracy2.stringWidth("Correct: " + score + "   Total: " + total)) / 2, 675);
+        String correctText = "Correct: " + score + ", Total: " + total;
+        g.drawString(correctText, offsetX + (gameWidth - metricsAccuracy2.stringWidth(correctText)) / 2, offsetY + 675);
 
 
-        // home button
+        // home button - anchor to top-left
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsHome = g.getFontMetrics();
-        homeButtonX = 10; 
-        homeButtonY = 100; 
-        homeButtonWidth = metricsHome.stringWidth("Home"); 
-        homeButtonHeight = metricsHome.getHeight(); 
-        g.drawString("Home", homeButtonX, homeButtonY); 
+        homeButtonX = ScreenHelper.fromLeft(10);
+        homeButtonY = 100;
+        homeButtonWidth = metricsHome.stringWidth("Home");
+        homeButtonHeight = metricsHome.getHeight();
+        g.drawString("Home", homeButtonX, homeButtonY);
         homeButtonY = homeButtonY - metricsHome.getAscent();
     }
 
     public void gameOver(Graphics g) {
+        int offsetX = getOffsetX();
+        int offsetY = getOffsetY();
+        int gameWidth = getGameWidth();
+        int gameHeight = getGameHeight();
+        int centerY = offsetY + gameHeight / 3;
+
         // game over text
         g.setColor(Color.RED);
         g.setFont(new Font("Ink Free",Font.BOLD, 75));
         FontMetrics metricsGameOver = getFontMetrics(g.getFont());
-        g.drawString("Game Over", (getWidth() - metricsGameOver.stringWidth("Game Over")) / 2, getHeight() / 3 + 50);
+        g.drawString("Game Over", offsetX + (gameWidth - metricsGameOver.stringWidth("Game Over")) / 2, centerY + 50);
         g.setColor(Color.WHITE);
-        g.setFont(new Font("Ink Free",Font.BOLD, 50)); 
-        
+        g.setFont(new Font("Ink Free",Font.BOLD, 50));
+
         // play again button
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 85));
         FontMetrics metricsPlayAgain = getFontMetrics(g.getFont());
-        retryButtonX = (getWidth() - metricsPlayAgain.stringWidth("Play Again")) / 2;
-        retryButtonY = (getHeight() / 2 + metricsPlayAgain.getHeight());
+        retryButtonX = offsetX + (gameWidth - metricsPlayAgain.stringWidth("Play Again")) / 2;
+        retryButtonY = offsetY + (gameHeight / 2 + metricsPlayAgain.getHeight());
         retryButtonWidth = metricsPlayAgain.stringWidth("Play Again"); // width of text
         retryButtonHeight = metricsPlayAgain.getHeight();   // height of text
         g.drawString("Play Again", retryButtonX, retryButtonY);
@@ -707,22 +800,24 @@ public class GamePanel extends JPanel implements ActionListener{
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 50));
         FontMetrics metricsAccuracy = getFontMetrics(g.getFont());
-        g.drawString("Accuracy: " + getAccuracy() + "%", (getWidth() - metricsAccuracy.stringWidth("Accuracy: " + getAccuracy() + "%")) / 2, 725);
-        
+        String accText = "Accuracy: " + getAccuracy() + "%";
+        g.drawString(accText, offsetX + (gameWidth - metricsAccuracy.stringWidth(accText)) / 2, offsetY + 725);
+
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 50));
         FontMetrics metricsAccuracy2 = getFontMetrics(g.getFont());
-        g.drawString("Correct: " + score + ", Total: " + total, (getWidth() - metricsAccuracy2.stringWidth("Correct: " + score + "   Total: " + total)) / 2, 800);
-    
-        // home button
+        String correctText = "Correct: " + score + ", Total: " + total;
+        g.drawString(correctText, offsetX + (gameWidth - metricsAccuracy2.stringWidth(correctText)) / 2, offsetY + 800);
+
+        // home button - anchor to top-left
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsHome = g.getFontMetrics();
-        homeButtonX = 10; 
-        homeButtonY = 100; 
-        homeButtonWidth = metricsHome.stringWidth("Home"); 
-        homeButtonHeight = metricsHome.getHeight(); 
-        g.drawString("Home", homeButtonX, homeButtonY); 
+        homeButtonX = ScreenHelper.fromLeft(10);
+        homeButtonY = 100;
+        homeButtonWidth = metricsHome.stringWidth("Home");
+        homeButtonHeight = metricsHome.getHeight();
+        g.drawString("Home", homeButtonX, homeButtonY);
         homeButtonY = homeButtonY - metricsHome.getAscent();
     }
 
@@ -742,7 +837,7 @@ public class GamePanel extends JPanel implements ActionListener{
             if (!movedThisTick) return;
 
             // check arrow keys
-            switch (e.getKeyCode()) { 
+            switch (e.getKeyCode()) {
                 case KeyEvent.VK_LEFT: // to go left
                 case KeyEvent.VK_A:
                     if (direction != 'R') { // condtionals so user cant do a 180 which would make the head hit the body
@@ -751,19 +846,19 @@ public class GamePanel extends JPanel implements ActionListener{
                     break;
                 case KeyEvent.VK_RIGHT: // to go right
                 case KeyEvent.VK_D:
-                    if (direction != 'L') { 
+                    if (direction != 'L') {
                         direction = 'R';
                     }
                     break;
                 case KeyEvent.VK_UP: // to go up
                 case KeyEvent.VK_W:
-                    if (direction != 'D') { 
+                    if (direction != 'D') {
                         direction = 'U';
                     }
                     break;
                 case KeyEvent.VK_DOWN: // to go left
                 case KeyEvent.VK_S:
-                    if (direction != 'U') { 
+                    if (direction != 'U') {
                         direction = 'D';
                     }
                     break;

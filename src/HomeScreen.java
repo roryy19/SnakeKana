@@ -3,7 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class HomeScreen extends JPanel {
-    
+
     private JFrame frame;
 
     private int playButtonX;
@@ -53,7 +53,7 @@ public class HomeScreen extends JPanel {
         katakanaButton.setOpaque(false);
         katakanaButton.setFocusPainted(false);
         bothButton.setOpaque(false);
-        bothButton.setFocusPainted(false); 
+        bothButton.setFocusPainted(false);
 
         // Group them
         modeGroup = new ButtonGroup();
@@ -68,9 +68,6 @@ public class HomeScreen extends JPanel {
 
         // Add them to panel
         setLayout(null);
-        hiraganaButton.setBounds(350, 530, 250, 50);
-        katakanaButton.setBounds(350, 590, 250, 50);
-        bothButton.setBounds(350, 650, 250, 50);
         add(hiraganaButton);
         add(katakanaButton);
         add(bothButton);
@@ -92,11 +89,44 @@ public class HomeScreen extends JPanel {
                 hiraganaButton.setSelected(true);
                 break;
         }
+
+        // Handle resize events
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                ScreenHelper.updateDimensions(getWidth(), getHeight());
+                layoutComponents();
+                repaint();
+            }
+        });
+
+        // Initial layout
+        layoutComponents();
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        if (GameSettings.isFullscreen()) {
+            return new Dimension(ScreenHelper.getWidth(), ScreenHelper.getHeight());
+        }
+        return new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT);
+    }
+
+    private void layoutComponents() {
+        // Center radio buttons horizontally, positioned below the lowered Play button
+        int radioWidth = 250;
+        int radioHeight = 50;
+        int radioX = ScreenHelper.centerX(radioWidth) + 25;  // Offset to align with Play button
+        int centerY = ScreenHelper.centerY(0);
+
+        hiraganaButton.setBounds(radioX, centerY + 50, radioWidth, radioHeight);
+        katakanaButton.setBounds(radioX, centerY + 110, radioWidth, radioHeight);
+        bothButton.setBounds(radioX, centerY + 170, radioWidth, radioHeight);
     }
 
     private void checkClick(int x, int y) {
         // play button
-        if (x >= playButtonX && x <= (playButtonX + playButtonWidth) && 
+        if (x >= playButtonX && x <= (playButtonX + playButtonWidth) &&
             y >= playButtonY && y <= (playButtonY + playButtonHeight)) {
             startGame();
             SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
@@ -122,9 +152,12 @@ public class HomeScreen extends JPanel {
 
         GamePanel gamePanel = new GamePanel(frame, selectedKanaMode);
         frame.add(gamePanel);
-        frame.pack();
+        if (!GameSettings.isFullscreen()) {
+            frame.pack();
+        }
         gamePanel.requestFocusInWindow();
-        frame.validate();
+        frame.revalidate();
+        frame.repaint();
     }
 
     private void startMenu() {
@@ -133,9 +166,12 @@ public class HomeScreen extends JPanel {
         setMode();
         MenuScreen menuScreen = new MenuScreen(frame);
         frame.add(menuScreen);
-        frame.pack();
+        if (!GameSettings.isFullscreen()) {
+            frame.pack();
+        }
         menuScreen.requestFocusInWindow();
-        frame.validate();
+        frame.revalidate();
+        frame.repaint();
     }
 
     private void startChart() {
@@ -145,9 +181,12 @@ public class HomeScreen extends JPanel {
 
         ChartScreen chartchartScreen = new ChartScreen(frame);
         frame.add(chartchartScreen);
-        frame.pack();
+        if (!GameSettings.isFullscreen()) {
+            frame.pack();
+        }
         chartchartScreen.requestFocusInWindow();
-        frame.validate();
+        frame.revalidate();
+        frame.repaint();
     }
 
     @Override
@@ -180,8 +219,8 @@ public class HomeScreen extends JPanel {
 
         int totalWidth = text1Width + text2Width;
         // center together as one phrase
-        int x = (GameConstants.SCREEN_WIDTH - totalWidth) / 2;
-        int y = 200;  
+        int x = ScreenHelper.centerX(totalWidth);
+        int y = 200;
 
         // "Snake" in green
         g.setColor(new Color(23, 102, 31));
@@ -196,29 +235,36 @@ public class HomeScreen extends JPanel {
         g.setColor(Color.CYAN);
         g.setFont(new Font("Ink Free", Font.BOLD, 125));
         FontMetrics metricsPlay = g.getFontMetrics();
-        playButtonX = (GameConstants.SCREEN_WIDTH - metricsPlay.stringWidth("Play")) / 2; // center on x axis
-        playButtonY = (GameConstants.SCREEN_HEIGHT / 2); // y axis
-        playButtonWidth = metricsPlay.stringWidth("Play"); // width of Play text
-        playButtonHeight = metricsPlay.getHeight(); // height of play text
-        g.drawString("Play", playButtonX, playButtonY); 
+
+        // Center Play button, lowered to avoid overlapping with title
+        playButtonWidth = metricsPlay.stringWidth("Play");
+        playButtonHeight = metricsPlay.getHeight();
+        playButtonX = ScreenHelper.centerX(playButtonWidth);
+        playButtonY = ScreenHelper.centerY(playButtonHeight) + 50;
+
+        g.drawString("Play", playButtonX, playButtonY);
         playButtonY = playButtonY - metricsPlay.getAscent(); // make Y coord top of text not middle for clicking
-        
+
         // Japanese (あそぶ)
-        g.setFont(new Font("Dialog", Font.PLAIN, 40)); 
-        FontMetrics metricsJp = g.getFontMetrics(); 
+        g.setFont(new Font("Dialog", Font.PLAIN, 40));
+        FontMetrics metricsJp = g.getFontMetrics();
         int playButtonJ = metricsJp.stringWidth("(あそぶ)");
-        g.drawString("(あそぶ)", (GameConstants.SCREEN_WIDTH - playButtonJ) / 2, playButtonY - 30);
+        g.drawString("(あそぶ)", ScreenHelper.centerX(playButtonJ), playButtonY);
     }
 
     private void drawMenuButton(Graphics g) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsMenu = g.getFontMetrics();
-        menuButtonX = 650; //(GameConstants.SCREEN_WIDTH - metricsMenu.stringWidth("Menu")) / 2; // center on x axis
-        menuButtonY = (GameConstants.SCREEN_HEIGHT - 100); // bottom half of y axis
-        menuButtonWidth = metricsMenu.stringWidth("Menu"); // width of menu text
-        menuButtonHeight = metricsMenu.getHeight(); // height of menu text
-        g.drawString("Menu", menuButtonX, menuButtonY); 
+
+        menuButtonWidth = metricsMenu.stringWidth("Menu");
+        menuButtonHeight = metricsMenu.getHeight();
+
+        // Anchor to bottom-right
+        menuButtonX = ScreenHelper.fromRight(50, menuButtonWidth);
+        menuButtonY = ScreenHelper.fromBottom(50, 0);
+
+        g.drawString("Menu", menuButtonX, menuButtonY);
         menuButtonY = menuButtonY - metricsMenu.getAscent(); // make Y coord top of text not middle for clicking
     }
 
@@ -230,9 +276,9 @@ public class HomeScreen extends JPanel {
         String line1 = "Kana Charts &";
         String line2 = "Practice Quizzes";
 
-        // Position the first line
-        chartButtonX = 25;
-        chartButtonY = GameConstants.SCREEN_HEIGHT - 130;
+        // Anchor to bottom-left
+        chartButtonX = ScreenHelper.fromLeft(25);
+        chartButtonY = ScreenHelper.fromBottom(130, 0);
 
         // Draw first line
         g.drawString(line1, chartButtonX, chartButtonY);

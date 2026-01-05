@@ -28,11 +28,28 @@ public class KeybindsScreen extends JPanel{
                 checkClick(e.getX(), e.getY());
             }
         });
-    } 
+
+        // Handle resize events
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                ScreenHelper.updateDimensions(getWidth(), getHeight());
+                repaint();
+            }
+        });
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        if (GameSettings.isFullscreen()) {
+            return new Dimension(ScreenHelper.getWidth(), ScreenHelper.getHeight());
+        }
+        return new Dimension(GameConstants.SCREEN_WIDTH, GameConstants.SCREEN_HEIGHT);
+    }
 
     private void checkClick(int x, int y) {
         // home button
-        if (x >= backButtonX && x <= (backButtonX + backButtonWidth) && 
+        if (x >= backButtonX && x <= (backButtonX + backButtonWidth) &&
             y >= backButtonY && y <= (backButtonY + backButtonHeight)) {
             SoundManager.getInstance().playButtonClick("/res/sound/button_click_sound.wav");
             startBack();
@@ -43,9 +60,12 @@ public class KeybindsScreen extends JPanel{
         frame.remove(this); // remove menu screen
         MenuScreen menuScreen = new MenuScreen(frame);
         frame.add(menuScreen);
-        frame.pack();
+        if (!GameSettings.isFullscreen()) {
+            frame.pack();
+        }
         menuScreen.requestFocusInWindow();
-        frame.validate();
+        frame.revalidate();
+        frame.repaint();
     }
 
     protected void paintComponent(Graphics g) {
@@ -63,40 +83,51 @@ public class KeybindsScreen extends JPanel{
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metricsBack = g.getFontMetrics();
-        backButtonX = 10; 
-        backButtonY = 70; 
-        backButtonWidth = metricsBack.stringWidth("Back"); 
-        backButtonHeight = metricsBack.getHeight(); 
-        g.drawString("Back", backButtonX, backButtonY); 
-        backButtonY = backButtonY - metricsBack.getAscent(); 
-    } 
+        // Anchor to top-left
+        backButtonX = ScreenHelper.fromLeft(10);
+        backButtonY = 70;
+        backButtonWidth = metricsBack.stringWidth("Back");
+        backButtonHeight = metricsBack.getHeight();
+        g.drawString("Back", backButtonX, backButtonY);
+        backButtonY = backButtonY - metricsBack.getAscent();
+    }
 
     public void drawKeybinds(Graphics g) {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Ink Free", Font.BOLD, 40));
 
-        g.drawString("Up:", 10, 140);
-        g.drawString("W / Up Arrow", 325, 140);
+        // Center the keybinds content horizontally
+        // Content width is approximately 500px (labels + values)
+        int contentWidth = 500;
+        int offsetX = ScreenHelper.centerX(contentWidth);
+        int labelX = offsetX;
+        int valueX = offsetX + 335;  // +20px more spacing from labels
 
-        g.drawString("Down:", 10, 210);
-        g.drawString("S / Down Arrow", 325, 210);
+        g.drawString("Up:", labelX, 140);
+        g.drawString("W / Up Arrow", valueX, 140);
 
-        g.drawString("Left:", 10, 280);
-        g.drawString("A / Left Arrow", 325, 280);
+        g.drawString("Down:", labelX, 210);
+        g.drawString("S / Down Arrow", valueX, 210);
 
-        g.drawString("Right:", 10, 350);
-        g.drawString("D / Right Arrow", 325, 350);
+        g.drawString("Left:", labelX, 280);
+        g.drawString("A / Left Arrow", valueX, 280);
 
-        g.drawString("Pause Game:", 10, 420);
-        g.drawString("Escape", 325, 420);
+        g.drawString("Right:", labelX, 350);
+        g.drawString("D / Right Arrow", valueX, 350);
 
-        g.drawString("Submit Answer:", 10, 490);
-        g.drawString("Enter", 325, 490);
+        g.drawString("Pause Game:", labelX, 420);
+        g.drawString("Escape", valueX, 420);
 
-        g.drawString("Skip Song:", 10, 560);
-        g.drawString("> (period)", 325, 560);
+        g.drawString("Submit Answer:", labelX, 490);
+        g.drawString("Enter", valueX, 490);
 
-        g.drawString("Previous Song:", 10, 630);
-        g.drawString("< (comma)", 325, 630);
+        g.drawString("Skip Song:", labelX, 560);
+        g.drawString("> (period)", valueX, 560);
+
+        g.drawString("Previous Song:", labelX, 630);
+        g.drawString("< (comma)", valueX, 630);
+
+        g.drawString("Toggle Fullscreen:", labelX, 700);
+        g.drawString("F11", valueX, 700);
     }
 }
